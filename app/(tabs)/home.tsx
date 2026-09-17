@@ -36,6 +36,7 @@ import {
 } from 'lucide-react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
+import { supabase } from '../../src/lib/supabase';
 
 const { width, height } = Dimensions.get('window');
 
@@ -71,16 +72,34 @@ export default function HomeInteractiveVault() {
   const router = useRouter();
   const webviewRef = useRef<WebView>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const scrollY = useSharedValue(0);
 
+  useEffect(() => {
+    // Check initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsLoggedIn(!!session);
+      setLoading(false);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsLoggedIn(!!session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   const handleLogin = () => {
-    setIsLoggedIn(true);
+    router.push('/auth');
   };
 
-  const handleLogout = () => {
-    setIsLoggedIn(false);
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
   };
+
+  if (loading) return <View style={styles.container} />;
 
   return (
     <View style={styles.container}>

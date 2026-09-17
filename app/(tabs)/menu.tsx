@@ -1,56 +1,91 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView } from 'react-native';
-import { useRouter } from 'expo-router';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../src/context/ThemeContext';
-import Ionicons from '@expo/vector-icons/Ionicons';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { Menu, Settings, LogOut, Bell, Shield, User, Globe } from 'lucide-react-native';
+import Animated, { FadeInUp } from 'react-native-reanimated';
+import { supabase } from '../../src/lib/supabase';
+import { useRouter } from 'expo-router';
+
+const LANGUAGES = [
+  { code: 'en', label: 'English' },
+  { code: 'hi', label: 'हिन्दी (Hindi)' },
+  { code: 'gu', label: 'ગુજરાતી (Gujarati)' },
+  { code: 'mr', label: 'मराठी (Marathi)' },
+  { code: 'ta', label: 'தமிழ் (Tamil)' },
+  { code: 'te', label: 'తెలుగు (Telugu)' }
+];
 
 export default function MenuScreen() {
-  const { t } = useTranslation();
   const { colors } = useTheme();
+  const { i18n } = useTranslation();
   const router = useRouter();
 
-  const sections = [
-    { title: t('dashboard.myHome'), items: [
-      { label: t('menu.appliances'), icon: 'hardware-chip-outline', route: '/appliances' },
-      { label: t('menu.vehicles'), icon: 'car-outline', route: '/vehicles' },
-      { label: t('menu.property'), icon: 'home-outline', route: '/property' },
-      { label: t('menu.family'), icon: 'people-outline', route: '/family' },
-      { label: t('menu.utilities'), icon: 'flash-outline', route: '/utilities' },
-    ]},
-    { title: '', items: [
-      { label: t('menu.warranties'), icon: 'shield-checkmark-outline', route: '/warranties' },
-      { label: t('menu.expenses'), icon: 'wallet-outline', route: '/expenses' },
-      { label: t('menu.reminders'), icon: 'alarm-outline', route: '/reminders' },
-      { label: t('menu.search'), icon: 'search-outline', route: '/search' },
-    ]},
-    { title: '', items: [
-      { label: t('menu.settings'), icon: 'settings-outline', route: '/settings' },
-    ]},
-  ];
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.replace('/auth');
+  };
+
+  const changeLanguage = (langCode: string) => {
+    i18n.changeLanguage(langCode);
+  };
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.scroll}>
-        <Text style={[styles.title, { color: colors.text }]}>{t('menu.title')}</Text>
+        <View style={styles.header}>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Settings</Text>
+        </View>
 
-        {sections.map((section, si) => (
-          <View key={si} style={[styles.sectionCard, { backgroundColor: colors.surface }]}>
-            {section.title ? <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{section.title}</Text> : null}
-            {section.items.map((item, ii) => (
-              <TouchableOpacity key={ii} style={[styles.menuItem, ii < section.items.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.border }]} onPress={() => router.push(item.route as any)} activeOpacity={0.6}>
-                <View style={[styles.menuIcon, { backgroundColor: colors.surfaceElevated }]}>
-                  <Ionicons name={item.icon as any} size={22} color={colors.primary} />
+        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>App Language</Text>
+        <View style={styles.langGrid}>
+          {LANGUAGES.map((lang, index) => (
+            <Animated.View key={lang.code} entering={FadeInUp.delay(index * 50).springify()} style={styles.langWrapper}>
+              <TouchableOpacity 
+                style={[
+                  styles.langBtn, 
+                  { backgroundColor: i18n.language === lang.code ? colors.primary : colors.surfaceElevated,
+                    borderColor: i18n.language === lang.code ? colors.primary : colors.border }
+                ]}
+                onPress={() => changeLanguage(lang.code)}
+              >
+                <Text style={[
+                  styles.langText, 
+                  { color: i18n.language === lang.code ? '#FFF' : colors.text }
+                ]}>
+                  {lang.label}
+                </Text>
+              </TouchableOpacity>
+            </Animated.View>
+          ))}
+        </View>
+
+        <Text style={[styles.sectionTitle, { color: colors.textSecondary, marginTop: 24 }]}>Preferences</Text>
+        <View style={styles.list}>
+          {[
+            { icon: User, label: 'Profile Settings' },
+            { icon: Shield, label: 'Security & Face ID' },
+            { icon: Bell, label: 'Notifications' },
+          ].map((item, index) => (
+            <Animated.View key={index} entering={FadeInUp.delay((index + 4) * 100).springify()}>
+              <TouchableOpacity style={[styles.menuItem, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <View style={[styles.iconBox, { backgroundColor: colors.primary + '10' }]}>
+                  <item.icon color={colors.primary} size={20} />
                 </View>
                 <Text style={[styles.menuLabel, { color: colors.text }]}>{item.label}</Text>
-                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
               </TouchableOpacity>
-            ))}
-          </View>
-        ))}
+            </Animated.View>
+          ))}
 
-        <View style={{ height: 100 }} />
+          <Animated.View entering={FadeInUp.delay(800).springify()}>
+            <TouchableOpacity onPress={handleLogout} style={[styles.menuItem, { backgroundColor: '#FEE2E2', borderColor: '#FECACA', marginTop: 16 }]}>
+              <View style={[styles.iconBox, { backgroundColor: '#EF4444' + '20' }]}>
+                <LogOut color="#EF4444" size={20} />
+              </View>
+              <Text style={[styles.menuLabel, { color: '#EF4444' }]}>Log Out</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -58,11 +93,18 @@ export default function MenuScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
-  scroll: { padding: 20 },
-  title: { fontSize: 28, fontWeight: '800', marginBottom: 20 },
-  sectionCard: { borderRadius: 18, marginBottom: 16, overflow: 'hidden', elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4 },
-  sectionTitle: { fontSize: 12, fontWeight: '700', textTransform: 'uppercase', paddingHorizontal: 18, paddingTop: 14, paddingBottom: 4, letterSpacing: 0.5 },
-  menuItem: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 18, paddingVertical: 14, gap: 14 },
-  menuIcon: { width: 40, height: 40, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
-  menuLabel: { flex: 1, fontSize: 16, fontWeight: '600' },
+  scroll: { paddingBottom: 100 },
+  header: { padding: 24, paddingTop: 12 },
+  headerTitle: { fontSize: 32, fontWeight: '800', letterSpacing: 0.5 },
+  sectionTitle: { fontSize: 14, fontWeight: '700', textTransform: 'uppercase', paddingHorizontal: 24, marginBottom: 12 },
+  
+  langGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 20, gap: 12 },
+  langWrapper: { width: '47%' },
+  langBtn: { paddingVertical: 14, paddingHorizontal: 12, borderRadius: 16, borderWidth: 1, alignItems: 'center' },
+  langText: { fontSize: 14, fontWeight: '600' },
+
+  list: { padding: 20, paddingTop: 0, gap: 12 },
+  menuItem: { flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: 20, borderWidth: 1 },
+  iconBox: { width: 40, height: 40, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginRight: 16 },
+  menuLabel: { fontSize: 16, fontWeight: '600' }
 });

@@ -1,93 +1,151 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, FlatList } from 'react-native';
-import { useTranslation } from 'react-i18next';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, SafeAreaView, ActivityIndicator } from 'react-native';
+import { supabase } from '../../src/lib/supabase';
 import { useTheme } from '../../src/context/ThemeContext';
-import { mockDocuments } from '../../src/data/documents';
-import { DocumentTypeColors } from '../../src/constants/Colors';
 import Ionicons from '@expo/vector-icons/Ionicons';
-
-const FILTERS = ['all', 'invoice', 'warranty', 'insurance', 'bill', 'service_record', 'tax', 'other'];
+import Animated, { FadeInUp, Layout } from 'react-native-reanimated';
 
 export default function DocumentsScreen() {
-  const { t } = useTranslation();
   const { colors } = useTheme();
-  const [activeFilter, setActiveFilter] = useState('all');
+  const [documents, setDocuments] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const filtered = activeFilter === 'all' ? mockDocuments : mockDocuments.filter(d => d.type === activeFilter);
+  const fetchDocuments = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('documents')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-  const filterLabels: Record<string, string> = {
-    all: t('documents.all'), invoice: t('documents.invoices'), warranty: t('documents.warranties'),
-    insurance: t('documents.insurance'), bill: t('documents.bills'), service_record: t('documents.service'),
-    tax: t('documents.tax'), other: t('documents.other'),
+      if (error) {
+        if (error.code !== '42P01') {
+          console.error("Error fetching docs:", error);
+        }
+      } else {
+        setDocuments(data || []);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDocuments();
+  }, []);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchDocuments();
+  };
+
+  const renderDoc = ({ item, index }: { item: any, index: number }) => {
+    // Parse extracted_data if it's stored as a string or array
+    let fields: any[] = [];
+    try {
+      if (typeof item.extracted_data === 'string') {
+        fields = JSON.parse(item.extracted_data);
+      } else if (Array.isArray(item.extracted_data)) {
+        fields = item.extracted_data;
+      }
+    } catch (e) {}
+
+    return (
+      <Animated.View 
+        entering={FadeInUp.delay(index * 100).springify()} 
+        layout={Layout.springify()}
+        style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}
+      >
+        <View style={styles.cardHeader}>
+          <View style={[styles.iconBox, { backgroundColor: colors.primary + '15' }]}>
+            <Ionicons name="document-text" size={24} color={colors.primary} />
+          </View>
+          <View style={styles.headerText}>
+            <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>{item.name || 'Unnamed Document'}</Text>
+            <Text style={[styles.subtitle, { color: colors.primary }]}>{item.type || 'Document'}</Text>
+          </View>
+          <TouchableOpacity style={[styles.actionBtn, { backgroundColor: colors.surfaceElevated }]}>
+            <Ionicons name="ellipsis-horizontal" size={20} color={colors.textSecondary} />
+          </TouchableOpacity>
+        </View>
+
+        {fields.length > 0 && (
+          <View style={[styles.dataBox, { backgroundColor: colors.surfaceElevated }]}>
+            {fields.map((f: any, i: number) => (
+              <View key={i} style={styles.dataRow}>
+                <Text style={[styles.dataKey, { color: colors.textSecondary }]}>{f.key}:</Text>
+                <Text style={[styles.dataValue, { color: colors.text }]}>{f.value}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+        
+        <View style={styles.footer}>
+          <Text style={[styles.date, { color: colors.textMuted }]}>
+            {new Date(item.created_at).toLocaleDateString()}
+          </Text>
+          <Text style={[styles.linked, { color: colors.textSecondary }]}>
+            <Ionicons name="link" size={12} /> {item.linked_entity || 'Vault Inbox'}
+          </Text>
+        </View>
+      </Animated.View>
+    );
   };
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.text }]}>{t('documents.title')}</Text>
-        <Text style={[styles.count, { color: colors.textSecondary }]}>{mockDocuments.length} {t('documents.title').toLowerCase()}</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>My Vault</Text>
+        <Text style={[styles.headerSub, { color: colors.textMuted }]}>All scanned documents & assets</Text>
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow} contentContainerStyle={styles.filterContent}>
-        {FILTERS.map(f => (
-          <TouchableOpacity key={f} onPress={() => setActiveFilter(f)}
-            style={[styles.filterChip, { backgroundColor: activeFilter === f ? colors.primary : colors.surfaceElevated, borderColor: activeFilter === f ? colors.primary : colors.border }]}>
-            <Text style={[styles.filterText, { color: activeFilter === f ? '#FFF' : colors.textSecondary }]}>{filterLabels[f] || f}</Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-
-      <FlatList data={filtered} keyExtractor={d => d.id} contentContainerStyle={styles.list}
-        renderItem={({ item }) => {
-          const typeColor = DocumentTypeColors[item.type] || DocumentTypeColors.other;
-          return (
-            <TouchableOpacity style={[styles.docCard, { backgroundColor: colors.surface }]} activeOpacity={0.7}>
-              <View style={[styles.docIcon, { backgroundColor: typeColor.bg }]}>
-                <Ionicons name={item.fileType === 'pdf' ? 'document-text' : 'image'} size={22} color={typeColor.text} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.docName, { color: colors.text }]} numberOfLines={1}>{item.name}</Text>
-                <View style={styles.docMeta}>
-                  <View style={[styles.typeBadge, { backgroundColor: typeColor.bg }]}>
-                    <Text style={[styles.typeText, { color: typeColor.text }]}>{item.type.replace('_', ' ')}</Text>
-                  </View>
-                  {item.linkedEntity && (
-                    <Text style={[styles.linkedText, { color: colors.textMuted }]}>→ {item.linkedEntity.name}</Text>
-                  )}
-                </View>
-                <Text style={[styles.dateText, { color: colors.textMuted }]}>{item.uploadDate}</Text>
-              </View>
-              {item.confidenceScore && (
-                <View style={[styles.confidence, { backgroundColor: colors.surfaceElevated }]}>
-                  <Text style={[styles.confText, { color: colors.success }]}>{Math.round(item.confidenceScore * 100)}%</Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          );
-        }}
-      />
+      {loading ? (
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      ) : documents.length === 0 ? (
+        <View style={styles.center}>
+          <Ionicons name="folder-open-outline" size={64} color={colors.border} />
+          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>Your vault is empty.</Text>
+          <Text style={[styles.emptySub, { color: colors.textMuted }]}>Use the + button to scan your first bill!</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={documents}
+          keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
+          renderItem={renderDoc}
+          contentContainerStyle={styles.list}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
+        />
+      )}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
-  header: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 8 },
-  title: { fontSize: 28, fontWeight: '800' },
-  count: { fontSize: 14, marginTop: 4 },
-  filterRow: { maxHeight: 48, marginBottom: 8 },
-  filterContent: { paddingHorizontal: 16, gap: 8 },
-  filterChip: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, borderWidth: 1 },
-  filterText: { fontSize: 13, fontWeight: '600' },
-  list: { paddingHorizontal: 16, paddingBottom: 100 },
-  docCard: { flexDirection: 'row', alignItems: 'center', padding: 14, borderRadius: 16, marginBottom: 10, gap: 12, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4 },
-  docIcon: { width: 46, height: 46, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
-  docName: { fontSize: 15, fontWeight: '600' },
-  docMeta: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },
-  typeBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
-  typeText: { fontSize: 10, fontWeight: '700', textTransform: 'capitalize' },
-  linkedText: { fontSize: 12 },
-  dateText: { fontSize: 11, marginTop: 3 },
-  confidence: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
-  confText: { fontSize: 12, fontWeight: '700' },
+  header: { padding: 24, paddingTop: 12 },
+  headerTitle: { fontSize: 32, fontWeight: '800', letterSpacing: 0.5 },
+  headerSub: { fontSize: 15, marginTop: 4, fontWeight: '500' },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
+  emptyText: { fontSize: 18, fontWeight: '600', marginTop: 16 },
+  emptySub: { fontSize: 14, marginTop: 8, textAlign: 'center' },
+  list: { padding: 20, paddingBottom: 120, gap: 16 },
+  card: { borderRadius: 24, padding: 20, borderWidth: 1, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 12, elevation: 2 },
+  cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 16, marginBottom: 16 },
+  iconBox: { width: 48, height: 48, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
+  headerText: { flex: 1 },
+  title: { fontSize: 16, fontWeight: '700', marginBottom: 2 },
+  subtitle: { fontSize: 13, fontWeight: '600' },
+  actionBtn: { width: 36, height: 36, borderRadius: 18, justifyContent: 'center', alignItems: 'center' },
+  dataBox: { padding: 16, borderRadius: 16, gap: 8, marginBottom: 16 },
+  dataRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  dataKey: { fontSize: 13, fontWeight: '500' },
+  dataValue: { fontSize: 14, fontWeight: '700' },
+  footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 16, borderTopWidth: 1, borderTopColor: 'rgba(0,0,0,0.05)' },
+  date: { fontSize: 12, fontWeight: '500' },
+  linked: { fontSize: 12, fontWeight: '600' }
 });
