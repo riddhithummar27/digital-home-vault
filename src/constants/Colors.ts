@@ -1,0 +1,72 @@
+import { ThemeColors } from '../types';
+
+export const LightTheme: ThemeColors = {
+  primary: '#6B4226',
+  primaryLight: '#8B5E3C',
+  primaryDark: '#4A2E1A',
+  secondary: '#FFF8E1',
+  accent: '#D4A574',
+  accentGold: '#C4913B',
+  background: '#FFFBF5',
+  surface: '#FFFFFF',
+  surfaceElevated: '#FFF5E6',
+  text: '#2D1810',
+  textSecondary: '#7A6152',
+  textMuted: '#A89282',
+  border: '#E8DDD0',
+  success: '#2D8B4E',
+  warning: '#D4870E',
+  danger: '#C62828',
+  info: '#1565C0',
+  cardShadow: 'rgba(107, 66, 38, 0.08)',
+  tabBar: '#FFFFFF',
+  tabBarBorder: '#E8DDD0',
+  statusBar: 'dark-content',
+};
+
+export const DarkTheme: ThemeColors = {
+  primary: '#D4A574',
+  primaryLight: '#E0B98A',
+  primaryDark: '#B8895A',
+  secondary: '#2D2319',
+  accent: '#D4A574',
+  accentGold: '#E0C080',
+  background: '#1A1412',
+  surface: '#2D2319',
+  surfaceElevated: '#3D2E1F',
+  text: '#F5EDE4',
+  textSecondary: '#C4AE98',
+  textMuted: '#8A7B6C',
+  border: '#4A3828',
+  success: '#4CAF50',
+  warning: '#FFB74D',
+  danger: '#EF5350',
+  info: '#42A5F5',
+  cardShadow: 'rgba(0, 0, 0, 0.3)',
+  tabBar: '#2D2319',
+  tabBarBorder: '#4A3828',
+  statusBar: 'light-content',
+};
+
+export const WarrantyColors = {
+  active: { bg: '#E8F5E9', text: '#2D8B4E', icon: '#2D8B4E', darkBg: '#1B3A25', darkText: '#66BB6A' },
+  expiring_soon: { bg: '#FFF3E0', text: '#D4870E', icon: '#D4870E', darkBg: '#3D2E0A', darkText: '#FFB74D' },
+  expired: { bg: '#FFEBEE', text: '#C62828', icon: '#C62828', darkBg: '#3D1515', darkText: '#EF5350' },
+  unknown: { bg: '#F5F5F5', text: '#757575', icon: '#757575', darkBg: '#2D2D2D', darkText: '#BDBDBD' },
+};
+
+export const DocumentTypeColors: Record<string, { bg: string; text: string }> = {
+  invoice: { bg: '#E3F2FD', text: '#1565C0' },
+  warranty: { bg: '#E8F5E9', text: '#2E7D32' },
+  insurance: { bg: '#FFF3E0', text: '#EF6C00' },
+  bill: { bg: '#F3E5F5', text: '#7B1FA2' },
+  receipt: { bg: '#E0F2F1', text: '#00695C' },
+  service_record: { bg: '#FBE9E7', text: '#BF360C' },
+  tax: { bg: '#FCE4EC', text: '#AD1457' },
+  identity: { bg: '#E8EAF6', text: '#283593' },
+  manual: { bg: '#EFEBE9', text: '#4E342E' },
+  property_doc: { bg: '#E1F5FE', text: '#01579B' },
+  registration: { bg: '#F1F8E9', text: '#33691E' },
+  certificate: { bg: '#FFF8E1', text: '#F9A825' },
+  other: { bg: '#ECEFF1', text: '#455A64' },
+};
