@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../src/context/ThemeContext';
 import { Menu, Settings, LogOut, Bell, Shield, User, Globe } from 'lucide-react-native';
@@ -18,7 +18,7 @@ const LANGUAGES = [
 
 export default function MenuScreen() {
   const { colors } = useTheme();
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -26,18 +26,31 @@ export default function MenuScreen() {
     router.replace('/auth');
   };
 
-  const changeLanguage = (langCode: string) => {
-    i18n.changeLanguage(langCode);
+  const changeLanguage = (langCode: string, langLabel: string) => {
+    Alert.alert(
+      'Change Language',
+      `Are you sure you want to switch the app language to ${langLabel}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Yes, Switch', 
+          onPress: () => {
+            i18n.changeLanguage(langCode);
+            Alert.alert('Language Updated', `The app is now running in ${langLabel}.`);
+          }
+        }
+      ]
+    );
   };
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.header}>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>Settings</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>{t('menu.settings', 'Settings')}</Text>
         </View>
 
-        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>App Language</Text>
+        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{t('menu.appLanguage', 'App Language')}</Text>
         <View style={styles.langGrid}>
           {LANGUAGES.map((lang, index) => (
             <Animated.View key={lang.code} entering={FadeInUp.delay(index * 50).springify()} style={styles.langWrapper}>
@@ -47,7 +60,7 @@ export default function MenuScreen() {
                   { backgroundColor: i18n.language === lang.code ? colors.primary : colors.surfaceElevated,
                     borderColor: i18n.language === lang.code ? colors.primary : colors.border }
                 ]}
-                onPress={() => changeLanguage(lang.code)}
+                onPress={() => changeLanguage(lang.code, lang.label)}
               >
                 <Text style={[
                   styles.langText, 
@@ -60,12 +73,12 @@ export default function MenuScreen() {
           ))}
         </View>
 
-        <Text style={[styles.sectionTitle, { color: colors.textSecondary, marginTop: 24 }]}>Preferences</Text>
+        <Text style={[styles.sectionTitle, { color: colors.textSecondary, marginTop: 24 }]}>{t('menu.preferences', 'Preferences')}</Text>
         <View style={styles.list}>
           {[
-            { icon: User, label: 'Profile Settings' },
-            { icon: Shield, label: 'Security & Face ID' },
-            { icon: Bell, label: 'Notifications' },
+            { icon: User, label: t('menu.profile', 'Profile Settings') },
+            { icon: Shield, label: t('menu.security', 'Security & Face ID') },
+            { icon: Bell, label: t('menu.notifications', 'Notifications') },
           ].map((item, index) => (
             <Animated.View key={index} entering={FadeInUp.delay((index + 4) * 100).springify()}>
               <TouchableOpacity style={[styles.menuItem, { backgroundColor: colors.surface, borderColor: colors.border }]}>
@@ -82,7 +95,7 @@ export default function MenuScreen() {
               <View style={[styles.iconBox, { backgroundColor: '#EF4444' + '20' }]}>
                 <LogOut color="#EF4444" size={20} />
               </View>
-              <Text style={[styles.menuLabel, { color: '#EF4444' }]}>Log Out</Text>
+              <Text style={[styles.menuLabel, { color: '#EF4444' }]}>{t('menu.logout', 'Log Out')}</Text>
             </TouchableOpacity>
           </Animated.View>
         </View>

@@ -5,9 +5,11 @@ import { useTheme } from '../src/context/ThemeContext';
 import { ShieldCheck, Mail, Lock } from 'lucide-react-native';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 
 export default function AuthScreen() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const router = useRouter();
 
   const [email, setEmail] = useState('');
@@ -55,8 +57,8 @@ export default function AuthScreen() {
           <View style={styles.logoBox}>
             <ShieldCheck color="#FFF" size={48} strokeWidth={1.5} />
           </View>
-          <Text style={styles.brandTitle}>Digital Home</Text>
-          <Text style={styles.brandSubtitle}>Secure Vault Authentication</Text>
+          <Text style={styles.brandTitle}>{t('auth.brandTitle', 'Digital Home')}</Text>
+          <Text style={styles.brandSubtitle}>{t('auth.brandSubtitle', 'Secure Vault Authentication')}</Text>
         </Animated.View>
 
         <Animated.View entering={FadeInUp.duration(800).delay(200)} style={[styles.authCard, { backgroundColor: 'rgba(15, 23, 42, 0.7)' }]}>
@@ -65,7 +67,7 @@ export default function AuthScreen() {
             <Mail color="#94A3B8" size={20} style={styles.inputIcon} />
             <TextInput
               style={styles.input}
-              placeholder="Email Address"
+              placeholder={t('auth.email', 'Email Address')}
               placeholderTextColor="#64748B"
               value={email}
               onChangeText={setEmail}
@@ -78,7 +80,7 @@ export default function AuthScreen() {
             <Lock color="#94A3B8" size={20} style={styles.inputIcon} />
             <TextInput
               style={styles.input}
-              placeholder="Password"
+              placeholder={t('auth.password', 'Password')}
               placeholderTextColor="#64748B"
               value={password}
               onChangeText={setPassword}
@@ -92,13 +94,13 @@ export default function AuthScreen() {
             disabled={loading}
           >
             {loading ? <ActivityIndicator color="#0F172A" /> : (
-              <Text style={styles.submitBtnText}>{isSignUp ? 'Create Vault Account' : 'Unlock Vault'}</Text>
+              <Text style={styles.submitBtnText}>{isSignUp ? t('auth.createAccount', 'Create Vault Account') : t('auth.unlockVault', 'Unlock Vault')}</Text>
             )}
           </TouchableOpacity>
 
           <TouchableOpacity onPress={() => setIsSignUp(!isSignUp)} style={styles.toggleBtn}>
             <Text style={styles.toggleText}>
-              {isSignUp ? 'Already have a vault? Sign In' : 'New user? Create a Vault Account'}
+              {isSignUp ? t('auth.alreadyHave', 'Already have a vault? Sign In') : t('auth.newUser', 'New user? Create a Vault Account')}
             </Text>
           </TouchableOpacity>
 

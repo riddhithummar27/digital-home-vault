@@ -232,14 +232,14 @@ export default function UploadScreen() {
               <View style={[styles.uploadIcon, { backgroundColor: '#10B98120' }]}>
                 <Ionicons name="sparkles" size={48} color="#10B981" />
               </View>
-              <Text style={[styles.selectionTitle, { color: colors.text }]}>Activate 100% True AI</Text>
+              <Text style={[styles.selectionTitle, { color: colors.text }]}>{t('upload.activateTrueAI', 'Activate 100% True AI')}</Text>
               <Text style={[styles.selectionSub, { color: colors.textMuted }]}>
-                To get perfect, 100% accurate document recognition, we use Google Gemini Vision AI. Get a free API key from aistudio.google.com and paste it below.
+                {t('upload.aiDescription', 'To get perfect, 100% accurate document recognition, we use Google Gemini Vision AI. Get a free API key from aistudio.google.com and paste it below.')}
               </Text>
               
               <TextInput
                 style={[styles.textInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surfaceElevated }]}
-                placeholder="Paste Gemini API Key here"
+                placeholder={t('upload.pasteKey', 'Paste Gemini API Key here')}
                 placeholderTextColor={colors.textMuted}
                 value={apiKey}
                 onChangeText={setApiKey}
@@ -247,21 +247,21 @@ export default function UploadScreen() {
               />
 
               <TouchableOpacity style={[styles.saveBtn, { backgroundColor: '#10B981', marginTop: 24 }]} onPress={saveApiKey}>
-                <Text style={styles.saveBtnText}>Activate True AI</Text>
+                <Text style={styles.saveBtnText}>{t('upload.activateBtn', 'Activate True AI')}</Text>
               </TouchableOpacity>
             </View>
           )}
 
           {stage === 'type_selection' && (
             <View style={styles.selectionContainer}>
-              <Text style={[styles.selectionTitle, { color: colors.text }]}>What are you uploading?</Text>
+              <Text style={[styles.selectionTitle, { color: colors.text }]}>{t('upload.whatAreYouUploading', 'What are you uploading?')}</Text>
               <Text style={[styles.selectionSub, { color: colors.textMuted }]}>
-                Type literally anything. The True AI will perfectly verify it and extract its details.
+                {t('upload.whatAreYouUploadingSub', 'Type literally anything. The True AI will perfectly verify it and extract its details.')}
               </Text>
               
               <TextInput
                 style={[styles.textInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surfaceElevated }]}
-                placeholder="e.g. Dog Vaccination Record"
+                placeholder={t('upload.placeholder', 'e.g. Dog Vaccination Record')}
                 placeholderTextColor={colors.textMuted}
                 value={customDocType}
                 onChangeText={setCustomDocType}
@@ -269,7 +269,7 @@ export default function UploadScreen() {
               />
 
               <TouchableOpacity style={[styles.saveBtn, { backgroundColor: colors.primary, marginTop: 24, opacity: customDocType.trim().length > 1 ? 1 : 0.5 }]} onPress={handleContinue} disabled={customDocType.trim().length < 2}>
-                <Text style={styles.saveBtnText}>Continue</Text>
+                <Text style={styles.saveBtnText}>{t('upload.continue', 'Continue')}</Text>
                 <Ionicons name="arrow-forward" size={20} color="#FFF" />
               </TouchableOpacity>
             </View>
@@ -279,18 +279,18 @@ export default function UploadScreen() {
             <View style={[styles.uploadZone, { borderColor: colors.accent, backgroundColor: colors.surfaceElevated }]}>
               <TouchableOpacity onPress={() => setStage('type_selection')} style={styles.backBtn}>
                 <Ionicons name="arrow-back" size={20} color={colors.textSecondary} />
-                <Text style={{ color: colors.textSecondary }}>Change</Text>
+                <Text style={{ color: colors.textSecondary }}>{t('upload.change', 'Change')}</Text>
               </TouchableOpacity>
 
               <View style={[styles.uploadIcon, { backgroundColor: colors.primary + '18' }]}>
                 <Ionicons name="camera" size={48} color={colors.primary} />
               </View>
-              <Text style={[styles.uploadText, { color: colors.text }]}>Upload your "{customDocType}"</Text>
+              <Text style={[styles.uploadText, { color: colors.text }]}>{t('upload.uploadYour', 'Upload your {{type}}', { type: customDocType })}</Text>
               
               <View style={styles.uploadButtons}>
                 <TouchableOpacity style={[styles.uploadBtn, { backgroundColor: colors.accent }]} onPress={takePhoto}>
                   <Ionicons name="camera" size={18} color="#FFF" />
-                  <Text style={styles.uploadBtnText}>Take Photo</Text>
+                  <Text style={styles.uploadBtnText}>{t('upload.takePhoto', 'Take Photo')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -302,7 +302,7 @@ export default function UploadScreen() {
                 <Ionicons name={fileData.isImage ? "image" : "document-text"} size={32} color={colors.primary} />
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.fileName, { color: colors.text }]} numberOfLines={1}>{fileData.name}</Text>
-                  <Text style={{ color: colors.primary, fontSize: 12, fontWeight: '600', marginTop: 2 }}>True AI analyzing as: {customDocType}</Text>
+                  <Text style={{ color: colors.primary, fontSize: 12, fontWeight: '600', marginTop: 2 }}>{t('upload.analyzingAs', 'True AI analyzing as:')} {customDocType}</Text>
                 </View>
               </View>
               
@@ -330,9 +330,9 @@ export default function UploadScreen() {
 
           {stage === 'done' && dynamicResult && (
             <Animated.View style={[styles.resultCard, { backgroundColor: colors.surface, opacity: fadeAnim }]}>
-              <Text style={[styles.resultTitle, { color: colors.text }]}>True AI Verification Results</Text>
+              <Text style={[styles.resultTitle, { color: colors.text }]}>{t('upload.verificationResults', 'True AI Verification Results')}</Text>
               <View style={[styles.typeBadge, { backgroundColor: '#10B98120' }]}>
-                <Text style={{ color: '#10B981', fontWeight: '800', fontSize: 14 }}>✓ 100% VERIFIED {dynamicResult.type.toUpperCase()}</Text>
+                <Text style={{ color: '#10B981', fontWeight: '800', fontSize: 14 }}>{t('upload.verified', '✓ 100% VERIFIED')} {dynamicResult.type.toUpperCase()}</Text>
               </View>
               {dynamicResult.fields.map((f: any, i: number) => (
                 <View key={i} style={[styles.fieldRow, { borderBottomColor: colors.border }]}>
@@ -343,7 +343,7 @@ export default function UploadScreen() {
               <View style={styles.actionRow}>
                 <TouchableOpacity style={[styles.saveBtn, { backgroundColor: colors.primary }]} onPress={saveToDatabase}>
                   <Ionicons name="cloud-upload" size={20} color="#FFF" />
-                  <Text style={styles.saveBtnText}>Save to Secure Vault</Text>
+                  <Text style={styles.saveBtnText}>{t('upload.saveToVault', 'Save to Secure Vault')}</Text>
                 </TouchableOpacity>
               </View>
             </Animated.View>

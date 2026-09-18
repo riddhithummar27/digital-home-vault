@@ -4,9 +4,11 @@ import { supabase } from '../../src/lib/supabase';
 import { useTheme } from '../../src/context/ThemeContext';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import Animated, { FadeInUp, Layout } from 'react-native-reanimated';
+import { useTranslation } from 'react-i18next';
 
 export default function DocumentsScreen() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const [documents, setDocuments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -98,8 +100,8 @@ export default function DocumentsScreen() {
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>My Vault</Text>
-        <Text style={[styles.headerSub, { color: colors.textMuted }]}>All scanned documents & assets</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>{t('documents.title', 'My Vault')}</Text>
+        <Text style={[styles.headerSub, { color: colors.textMuted }]}>{t('documents.subtitle', 'All scanned documents & assets')}</Text>
       </View>
 
       {loading ? (
@@ -109,8 +111,8 @@ export default function DocumentsScreen() {
       ) : documents.length === 0 ? (
         <View style={styles.center}>
           <Ionicons name="folder-open-outline" size={64} color={colors.border} />
-          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>Your vault is empty.</Text>
-          <Text style={[styles.emptySub, { color: colors.textMuted }]}>Use the + button to scan your first bill!</Text>
+          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>{t('documents.emptyText', 'Your vault is empty.')}</Text>
+          <Text style={[styles.emptySub, { color: colors.textMuted }]}>{t('documents.emptySub', 'Use the + button to scan your first bill!')}</Text>
         </View>
       ) : (
         <FlatList

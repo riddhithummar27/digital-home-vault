@@ -38,6 +38,8 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import { supabase } from '../../src/lib/supabase';
 
+import { useTranslation } from 'react-i18next';
+
 const { width, height } = Dimensions.get('window');
 
 // 3D Spline Background
@@ -59,17 +61,9 @@ const SPLINE_HTML = `
 </html>
 `;
 
-const FEATURES = [
-  { id: 'property', title: 'Properties', icon: HomeIcon, color: '#38BDF8', route: '/property' },
-  { id: 'family', title: 'Family', icon: Users, color: '#A78BFA', route: '/family' },
-  { id: 'vehicles', title: 'Vehicles', icon: Car, color: '#10B981', route: '/vehicles' },
-  { id: 'appliances', title: 'Appliances', icon: Box, color: '#F59E0B', route: '/appliances' },
-  { id: 'reminders', title: 'Reminders', icon: Bell, color: '#F43F5E', route: '/reminders' },
-  { id: 'expenses', title: 'Expenses', icon: Wallet, color: '#14B8A6', route: '/expenses' },
-];
-
 export default function HomeInteractiveVault() {
   const router = useRouter();
+  const { t } = useTranslation();
   const webviewRef = useRef<WebView>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -99,6 +93,15 @@ export default function HomeInteractiveVault() {
     await supabase.auth.signOut();
   };
 
+  const FEATURES = [
+    { id: 'property', title: t('home.property', 'Properties'), icon: HomeIcon, color: '#38BDF8', route: '/property' },
+    { id: 'family', title: t('home.family', 'Family'), icon: Users, color: '#A78BFA', route: '/family' },
+    { id: 'vehicles', title: t('home.vehicles', 'Vehicles'), icon: Car, color: '#10B981', route: '/vehicles' },
+    { id: 'appliances', title: t('home.appliances', 'Appliances'), icon: Box, color: '#F59E0B', route: '/appliances' },
+    { id: 'reminders', title: t('home.reminders', 'Reminders'), icon: Bell, color: '#F43F5E', route: '/reminders' },
+    { id: 'expenses', title: t('home.expenses', 'Expenses'), icon: Wallet, color: '#14B8A6', route: '/expenses' },
+  ];
+
   if (loading) return <View style={styles.container} />;
 
   return (
@@ -126,9 +129,9 @@ export default function HomeInteractiveVault() {
             <ShieldCheck color="#FFF" size={24} />
           </View>
           <View>
-            <Text style={styles.headerTitle}>Digital Home</Text>
+            <Text style={styles.headerTitle}>{t('home.brandTitle', 'Digital Home')}</Text>
             <Text style={styles.headerSubtitle}>
-              {isLoggedIn ? 'Vault Unlocked • Secure Mode' : 'Vault Locked • Authentication Required'}
+              {isLoggedIn ? t('home.myVault', 'Vault Unlocked • Secure Mode') : t('home.vaultLocked', 'Vault Locked • Authentication Required')}
             </Text>
           </View>
         </View>
@@ -148,13 +151,13 @@ export default function HomeInteractiveVault() {
             <View style={styles.lockIconContainer}>
               <Lock color="#38BDF8" size={42} strokeWidth={1.5} />
             </View>
-            <Text style={styles.loginTitle}>Access Your Vault</Text>
+            <Text style={styles.loginTitle}>{t('home.accessVault', 'Access Your Vault')}</Text>
             <Text style={styles.loginDesc}>
-              Unlock to manage your properties, vehicles, appliances, and family documents in full 3D interactive mode.
+              {t('home.unlockDesc', 'Unlock to manage your properties, vehicles, appliances, and family documents in full 3D interactive mode.')}
             </Text>
             
             <TouchableOpacity style={styles.loginBtn} onPress={handleLogin} activeOpacity={0.8}>
-              <Text style={styles.loginBtnText}>Authenticate with Face ID</Text>
+              <Text style={styles.loginBtnText}>{t('home.authFaceId', 'Authenticate with Face ID')}</Text>
               <Ionicons name="scan-outline" size={20} color="#FFF" style={{ marginLeft: 8 }} />
             </TouchableOpacity>
           </View>
@@ -173,28 +176,28 @@ export default function HomeInteractiveVault() {
         >
           {/* Main Stats Card */}
           <View style={styles.statsCard}>
-            <Text style={styles.statsGreeting}>Welcome back, Boss</Text>
-            <Text style={styles.statsValue}>All Systems Online</Text>
+            <Text style={styles.statsGreeting}>{t('home.welcomeBack', 'Welcome back, Boss')}</Text>
+            <Text style={styles.statsValue}>{t('home.allSystemsOnline', 'All Systems Online')}</Text>
             
             <View style={styles.statsRow}>
               <View style={styles.statBox}>
                 <Text style={styles.statNumber}>12</Text>
-                <Text style={styles.statLabel}>Active Assets</Text>
+                <Text style={styles.statLabel}>{t('home.activeAssets', 'Active Assets')}</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statBox}>
                 <Text style={styles.statNumber}>2</Text>
-                <Text style={styles.statLabel}>Alerts</Text>
+                <Text style={styles.statLabel}>{t('home.alerts', 'Alerts')}</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statBox}>
                 <Text style={styles.statNumber}>100%</Text>
-                <Text style={styles.statLabel}>Protected</Text>
+                <Text style={styles.statLabel}>{t('home.protected', 'Protected')}</Text>
               </View>
             </View>
           </View>
 
-          <Text style={styles.sectionTitle}>Vault Modules</Text>
+          <Text style={styles.sectionTitle}>{t('home.vaultModules', 'Vault Modules')}</Text>
 
           {/* Feature Grid with 3D-like styling */}
           <View style={styles.grid}>
@@ -220,13 +223,13 @@ export default function HomeInteractiveVault() {
           </View>
 
           {/* 3D Asset Highlight */}
-          <Text style={styles.sectionTitle}>3D Asset Highlight</Text>
+          <Text style={styles.sectionTitle}>{t('home.3dAssetHighlight', '3D Asset Highlight')}</Text>
           <View style={styles.highlightCard}>
             <View style={styles.highlightTextCol}>
-              <Text style={styles.highlightTitle}>LG DualCool AC</Text>
-              <Text style={styles.highlightSub}>Warranty active until 2027</Text>
+              <Text style={styles.highlightTitle}>{t('home.lgAc', 'LG DualCool AC')}</Text>
+              <Text style={styles.highlightSub}>{t('home.warrantyActive', 'Warranty active until 2027')}</Text>
               <TouchableOpacity style={styles.highlightBtn}>
-                <Text style={styles.highlightBtnText}>View 3D Model</Text>
+                <Text style={styles.highlightBtnText}>{t('home.view3dModel', 'View 3D Model')}</Text>
               </TouchableOpacity>
             </View>
             <View style={styles.highlightIconCol}>
