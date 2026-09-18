@@ -26,7 +26,7 @@ export default function OnboardingScreen() {
       flatListRef.current?.scrollToIndex({ index: activeIndex + 1 });
       setActiveIndex(activeIndex + 1);
     } else {
-      router.push('/(tabs)/home'); // Bypassed auth directly to home
+      router.push('/auth'); 
     }
   };
 
@@ -88,7 +88,7 @@ export default function OnboardingScreen() {
         </TouchableOpacity>
 
         {activeIndex < slides.length - 1 && (
-          <TouchableOpacity onPress={() => router.push('/(tabs)/home')} style={styles.skipButton}>
+          <TouchableOpacity onPress={() => router.push('/auth')} style={styles.skipButton}>
             <Text style={[styles.skipText, { color: colors.textMuted }]}>{t('onboarding.skip')}</Text>
           </TouchableOpacity>
         )}

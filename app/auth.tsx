@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, SafeAreaView, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, SafeAreaView, ActivityIndicator, KeyboardAvoidingView, Platform, ImageBackground } from 'react-native';
 import { supabase } from '../src/lib/supabase';
 import { useTheme } from '../src/context/ThemeContext';
 import { ShieldCheck, Mail, Lock } from 'lucide-react-native';
-import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+
+const bgBefore = require('../assets/before log in image.jpeg');
 
 export default function AuthScreen() {
   const { colors } = useTheme();
@@ -15,53 +16,35 @@ export default function AuthScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
-
   const handleAuth = async () => {
-    if (!email || !password) {
-      Alert.alert('Required', 'Please enter both email and password.');
-      return;
-    }
-
     setLoading(true);
     try {
-      if (isSignUp) {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-        });
-        if (error) throw error;
-        Alert.alert('Success', 'Account created! Please sign in.');
-        setIsSignUp(false);
-      } else {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        if (error) throw error;
-        // Successful login
-        router.replace('/(tabs)/home');
-      }
-    } catch (error: any) {
-      Alert.alert('Authentication Error', error.message);
+      // BYPASSING SUPABASE AUTHENTICATION FOR NOW
+      const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+      await AsyncStorage.setItem('mock_auth', 'true');
+      router.replace('/setup');
+    } catch (error) {
+      console.error(error);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: '#07090F' }]}>
+    <ImageBackground source={bgBefore} style={styles.safe} resizeMode="cover">
+      <View style={[StyleSheet.absoluteFillObject, { backgroundColor: 'rgba(0,0,0,0.4)' }]} />
+      
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.container}>
         
-        <Animated.View entering={FadeInDown.duration(800)} style={styles.brandContainer}>
+        <View style={styles.brandContainer}>
           <View style={styles.logoBox}>
             <ShieldCheck color="#FFF" size={48} strokeWidth={1.5} />
           </View>
           <Text style={styles.brandTitle}>{t('auth.brandTitle', 'Digital Home')}</Text>
           <Text style={styles.brandSubtitle}>{t('auth.brandSubtitle', 'Secure Vault Authentication')}</Text>
-        </Animated.View>
+        </View>
 
-        <Animated.View entering={FadeInUp.duration(800).delay(200)} style={[styles.authCard, { backgroundColor: 'rgba(15, 23, 42, 0.7)' }]}>
+        <View style={[styles.authCard, { backgroundColor: 'rgba(15, 23, 42, 0.75)' }]}>
           
           <View style={[styles.inputGroup, { backgroundColor: 'rgba(255,255,255,0.05)', borderColor: 'rgba(255,255,255,0.1)' }]}>
             <Mail color="#94A3B8" size={20} style={styles.inputIcon} />
@@ -94,20 +77,14 @@ export default function AuthScreen() {
             disabled={loading}
           >
             {loading ? <ActivityIndicator color="#0F172A" /> : (
-              <Text style={styles.submitBtnText}>{isSignUp ? t('auth.createAccount', 'Create Vault Account') : t('auth.unlockVault', 'Unlock Vault')}</Text>
+              <Text style={styles.submitBtnText}>Initialize Vault (Setup Wizard)</Text>
             )}
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => setIsSignUp(!isSignUp)} style={styles.toggleBtn}>
-            <Text style={styles.toggleText}>
-              {isSignUp ? t('auth.alreadyHave', 'Already have a vault? Sign In') : t('auth.newUser', 'New user? Create a Vault Account')}
-            </Text>
-          </TouchableOpacity>
-
-        </Animated.View>
+        </View>
 
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </ImageBackground>
   );
 }
 

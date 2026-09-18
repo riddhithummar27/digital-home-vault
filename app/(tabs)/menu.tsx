@@ -1,123 +1,145 @@
 import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Alert } from 'react-native';
-import { useTranslation } from 'react-i18next';
-import { useTheme } from '../../src/context/ThemeContext';
-import { Menu, Settings, LogOut, Bell, Shield, User, Globe } from 'lucide-react-native';
-import Animated, { FadeInUp } from 'react-native-reanimated';
-import { supabase } from '../../src/lib/supabase';
-import { useRouter } from 'expo-router';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Platform } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
-const LANGUAGES = [
-  { code: 'en', label: 'English' },
-  { code: 'hi', label: 'हिन्दी (Hindi)' },
-  { code: 'gu', label: 'ગુજરાતી (Gujarati)' },
-  { code: 'mr', label: 'मराठी (Marathi)' },
-  { code: 'ta', label: 'தமிழ் (Tamil)' },
-  { code: 'te', label: 'తెలుగు (Telugu)' }
+const { width } = Dimensions.get('window');
+
+// Luxury Wood & Gold Palette
+const PALETTE = {
+  bg: '#F9F6F0', // Warm cream/sand
+  woodDark: '#2D1B15', // Deep espresso wood
+  woodLight: '#4E342E', // Walnut
+  gold: '#D4AF37', // Metallic gold
+  textDark: '#1C1C1C',
+  textMuted: '#795548',
+  white: '#FFFFFF',
+};
+
+const FEATURE_MODULES = [
+  {
+    category: "Tier 1: Core Vault",
+    features: [
+      { name: "Document Vault", desc: "Encrypted storage for PDFs & receipts", icon: "lock-closed-outline" },
+      { name: "AI OCR Intelligence", desc: "Auto-extracts facts from files", icon: "scan-outline" },
+      { name: "Asset Management", desc: "Track appliances & electronics", icon: "tv-outline" },
+      { name: "Warranty Tracking", desc: "Live expiry dashboards", icon: "shield-checkmark-outline" },
+      { name: "Maintenance History", desc: "Timeline of asset upkeep", icon: "build-outline" },
+      { name: "Reminder System", desc: "Alerts for renewals & service", icon: "notifications-outline" },
+      { name: "Global AI Search", desc: "Search across OCR & tags", icon: "search-outline" },
+      { name: "AI Home Assistant", desc: "Conversational household bot", icon: "chatbubbles-outline" },
+    ]
+  },
+  {
+    category: "Tier 2: Expansion",
+    features: [
+      { name: "Bills & Expenses", desc: "Track household spending", icon: "wallet-outline" },
+      { name: "Family Permissions", desc: "Role-based vault sharing", icon: "people-outline" },
+      { name: "Deep Doc Preview", desc: "Metadata & entity linking", icon: "document-text-outline" },
+    ]
+  },
+  {
+    category: "Tier 3: Predictive & Milestones",
+    features: [
+      { name: "Predictive Intelligence", desc: "Cost-benefit repair analysis", icon: "analytics-outline" },
+      { name: "Property Handover", desc: "Transition packet generation", icon: "home-outline" },
+      { name: "Emergency Pack", desc: "Curated critical documents", icon: "medkit-outline" },
+      { name: "Moving House Mode", desc: "Checklists & utility transfers", icon: "airplane-outline" },
+    ]
+  },
+  {
+    category: "Proposed Enhancements",
+    features: [
+      { name: "Email & WhatsApp Ingest", desc: "Frictionless uploads", icon: "mail-outline" },
+      { name: "Human Review Queue", desc: "Verify AI confidence scores", icon: "checkmark-done-outline" },
+      { name: "Missing Docs AI", desc: "Proactive completion nudges", icon: "help-buoy-outline" },
+      { name: "Claims Assistant", desc: "Auto-assemble warranty claims", icon: "briefcase-outline" },
+      { name: "Multi-Property", desc: "Landlord & vacation homes", icon: "business-outline" },
+      { name: "Vendor Directory", desc: "Service contacts & history", icon: "call-outline" },
+      { name: "Digital Nominee", desc: "Break-glass emergency access", icon: "key-outline" },
+      { name: "Recall Watch", desc: "Safety tracking by model #", icon: "warning-outline" },
+      { name: "Utility Metering", desc: "Usage charts & anomalies", icon: "speedometer-outline" },
+      { name: "Data Portability", desc: "Full JSON/CSV vault export", icon: "download-outline" },
+      { name: "Regional Localization", desc: "PAN, RC, PUC & local formats", icon: "earth-outline" },
+    ]
+  }
 ];
 
-export default function MenuScreen() {
-  const { colors } = useTheme();
-  const { t, i18n } = useTranslation();
-  const router = useRouter();
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.replace('/auth');
-  };
-
-  const changeLanguage = (langCode: string, langLabel: string) => {
-    Alert.alert(
-      'Change Language',
-      `Are you sure you want to switch the app language to ${langLabel}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Yes, Switch', 
-          onPress: () => {
-            i18n.changeLanguage(langCode);
-            Alert.alert('Language Updated', `The app is now running in ${langLabel}.`);
-          }
-        }
-      ]
-    );
-  };
-
+export default function AllFeaturesScreen() {
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]}>
-      <ScrollView contentContainerStyle={styles.scroll}>
-        <View style={styles.header}>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>{t('menu.settings', 'Settings')}</Text>
-        </View>
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>The Master Vault</Text>
+        <Text style={styles.headerSubtitle}>Comprehensive Feature Hub</Text>
+      </View>
 
-        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{t('menu.appLanguage', 'App Language')}</Text>
-        <View style={styles.langGrid}>
-          {LANGUAGES.map((lang, index) => (
-            <Animated.View key={lang.code} entering={FadeInUp.delay(index * 50).springify()} style={styles.langWrapper}>
-              <TouchableOpacity 
-                style={[
-                  styles.langBtn, 
-                  { backgroundColor: i18n.language === lang.code ? colors.primary : colors.surfaceElevated,
-                    borderColor: i18n.language === lang.code ? colors.primary : colors.border }
-                ]}
-                onPress={() => changeLanguage(lang.code, lang.label)}
-              >
-                <Text style={[
-                  styles.langText, 
-                  { color: i18n.language === lang.code ? '#FFF' : colors.text }
-                ]}>
-                  {lang.label}
-                </Text>
-              </TouchableOpacity>
-            </Animated.View>
-          ))}
-        </View>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        
+        {/* Luxury Banner */}
+        <LinearGradient colors={[PALETTE.woodDark, PALETTE.woodLight]} style={styles.luxuryBanner} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+          <Ionicons name="diamond-outline" size={32} color={PALETTE.gold} style={styles.bannerIcon} />
+          <View>
+            <Text style={styles.bannerTitle}>Estate Management</Text>
+            <Text style={styles.bannerDesc}>All your modules unlocked.</Text>
+          </View>
+        </LinearGradient>
 
-        <Text style={[styles.sectionTitle, { color: colors.textSecondary, marginTop: 24 }]}>{t('menu.preferences', 'Preferences')}</Text>
-        <View style={styles.list}>
-          {[
-            { icon: User, label: t('menu.profile', 'Profile Settings') },
-            { icon: Shield, label: t('menu.security', 'Security & Face ID') },
-            { icon: Bell, label: t('menu.notifications', 'Notifications') },
-          ].map((item, index) => (
-            <Animated.View key={index} entering={FadeInUp.delay((index + 4) * 100).springify()}>
-              <TouchableOpacity style={[styles.menuItem, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                <View style={[styles.iconBox, { backgroundColor: colors.primary + '10' }]}>
-                  <item.icon color={colors.primary} size={20} />
-                </View>
-                <Text style={[styles.menuLabel, { color: colors.text }]}>{item.label}</Text>
-              </TouchableOpacity>
-            </Animated.View>
-          ))}
+        {FEATURE_MODULES.map((section, idx) => (
+          <View key={idx} style={styles.section}>
+            <Text style={styles.sectionTitle}>{section.category}</Text>
+            
+            <View style={styles.grid}>
+              {section.features.map((feature, fIdx) => (
+                <TouchableOpacity key={fIdx} style={styles.card} activeOpacity={0.9}>
+                  <View style={styles.iconRing}>
+                    <Ionicons name={feature.icon as any} size={22} color={PALETTE.woodDark} />
+                  </View>
+                  <Text style={styles.featureTitle} numberOfLines={1}>{feature.name}</Text>
+                  <Text style={styles.featureDesc} numberOfLines={2}>{feature.desc}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        ))}
 
-          <Animated.View entering={FadeInUp.delay(800).springify()}>
-            <TouchableOpacity onPress={handleLogout} style={[styles.menuItem, { backgroundColor: '#FEE2E2', borderColor: '#FECACA', marginTop: 16 }]}>
-              <View style={[styles.iconBox, { backgroundColor: '#EF4444' + '20' }]}>
-                <LogOut color="#EF4444" size={20} />
-              </View>
-              <Text style={[styles.menuLabel, { color: '#EF4444' }]}>{t('menu.logout', 'Log Out')}</Text>
-            </TouchableOpacity>
-          </Animated.View>
-        </View>
+        <View style={{ height: 100 }} />
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1 },
-  scroll: { paddingBottom: 100 },
-  header: { padding: 24, paddingTop: 12 },
-  headerTitle: { fontSize: 32, fontWeight: '800', letterSpacing: 0.5 },
-  sectionTitle: { fontSize: 14, fontWeight: '700', textTransform: 'uppercase', paddingHorizontal: 24, marginBottom: 12 },
+  container: { flex: 1, backgroundColor: PALETTE.bg },
+  header: { paddingTop: 70, paddingHorizontal: 24, paddingBottom: 24, backgroundColor: PALETTE.bg, borderBottomWidth: 1, borderBottomColor: 'rgba(78, 52, 46, 0.1)' },
+  headerTitle: { color: PALETTE.woodDark, fontSize: 34, fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif', fontWeight: 'bold' },
+  headerSubtitle: { color: PALETTE.textMuted, fontSize: 15, marginTop: 4, fontStyle: 'italic' },
   
-  langGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 20, gap: 12 },
-  langWrapper: { width: '47%' },
-  langBtn: { paddingVertical: 14, paddingHorizontal: 12, borderRadius: 16, borderWidth: 1, alignItems: 'center' },
-  langText: { fontSize: 14, fontWeight: '600' },
+  scrollContent: { padding: 20 },
+  
+  luxuryBanner: {
+    flexDirection: 'row', alignItems: 'center', padding: 24, borderRadius: 20, marginBottom: 32,
+    shadowColor: PALETTE.woodDark, shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.2, shadowRadius: 16, elevation: 10
+  },
+  bannerIcon: { marginRight: 16 },
+  bannerTitle: { color: PALETTE.gold, fontSize: 18, fontWeight: '700', letterSpacing: 1 },
+  bannerDesc: { color: PALETTE.white, fontSize: 14, marginTop: 4, opacity: 0.9 },
 
-  list: { padding: 20, paddingTop: 0, gap: 12 },
-  menuItem: { flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: 20, borderWidth: 1 },
-  iconBox: { width: 40, height: 40, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginRight: 16 },
-  menuLabel: { fontSize: 16, fontWeight: '600' }
+  section: { marginBottom: 32 },
+  sectionTitle: { color: PALETTE.woodLight, fontSize: 20, fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif', fontWeight: 'bold', marginBottom: 16, borderLeftWidth: 3, borderLeftColor: PALETTE.gold, paddingLeft: 12 },
+  
+  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 12 },
+  
+  card: {
+    width: (width - 52) / 2, // 2 columns with gaps
+    backgroundColor: PALETTE.white, padding: 16, borderRadius: 16, marginBottom: 4,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
+    borderWidth: 1, borderColor: 'rgba(212, 175, 55, 0.2)', // Subtle gold border
+  },
+  iconRing: {
+    width: 44, height: 44, borderRadius: 22, backgroundColor: PALETTE.bg,
+    justifyContent: 'center', alignItems: 'center', marginBottom: 12,
+    borderWidth: 1, borderColor: 'rgba(78, 52, 46, 0.1)'
+  },
+  featureTitle: { color: PALETTE.textDark, fontSize: 15, fontWeight: '700', marginBottom: 4 },
+  featureDesc: { color: PALETTE.textMuted, fontSize: 12, lineHeight: 16 },
 });
