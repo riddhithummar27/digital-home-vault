@@ -6,6 +6,17 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 const { width } = Dimensions.get('window');
 
+// Light Brown Wood, Cream, Black Theme
+const PALETTE = {
+  bg: '#FAF6F0', 
+  woodDark: '#4A2F1D', 
+  woodMedium: '#8B5E34', 
+  woodLight: '#D4A373', 
+  textBlack: '#1A1A1A', 
+  textMuted: '#5C4033',
+  white: '#FFFFFF', 
+};
+
 const DUMMY_ASSETS = [
   {
     id: '1',
@@ -16,8 +27,8 @@ const DUMMY_ASSETS = [
     price: '₹45,000',
     warrantyStatus: 'active',
     warrantyExpiry: '12 Aug 2027',
-    icon: 'snow-outline',
-    color: ['#0284C7', '#0369A1'], // Blue gradient
+    icon: 'snow',
+    color: ['#8B5E34', '#4A2F1D'], // Wood gradient
   },
   {
     id: '2',
@@ -28,8 +39,8 @@ const DUMMY_ASSETS = [
     price: '₹15,40,000',
     warrantyStatus: 'expiring_soon',
     warrantyExpiry: '05 Oct 2026',
-    icon: 'car-sport-outline',
-    color: ['#EA580C', '#C2410C'], // Orange gradient
+    icon: 'car-sport',
+    color: ['#6F4E37', '#4A2F1D'], // Darker Wood
   },
   {
     id: '3',
@@ -40,8 +51,8 @@ const DUMMY_ASSETS = [
     price: '₹1,20,000',
     warrantyStatus: 'expired',
     warrantyExpiry: '10 Jan 2025',
-    icon: 'tv-outline',
-    color: ['#7C3AED', '#6D28D9'], // Purple gradient
+    icon: 'tv',
+    color: ['#A67B5B', '#6F4E37'], // Lighter Wood
   },
   {
     id: '4',
@@ -49,136 +60,145 @@ const DUMMY_ASSETS = [
     category: 'Appliance',
     brand: 'LG',
     purchaseDate: '22 Mar 2026',
-    price: '₹34,500',
+    price: '₹38,500',
     warrantyStatus: 'active',
     warrantyExpiry: '22 Mar 2028',
-    icon: 'water-outline',
-    color: ['#059669', '#047857'], // Green gradient
+    icon: 'water',
+    color: ['#D4A373', '#8B5E34'], // Caramel Wood
   }
 ];
 
-export default function AssetManagementScreen() {
+export default function AssetHubScreen() {
   const router = useRouter();
-
-  const getStatusBadge = (status: string) => {
-    switch(status) {
-      case 'active': return { bg: 'rgba(16, 185, 129, 0.2)', text: '#10B981', label: 'Active Warranty' };
-      case 'expiring_soon': return { bg: 'rgba(245, 158, 11, 0.2)', text: '#F59E0B', label: 'Expiring Soon' };
-      case 'expired': return { bg: 'rgba(239, 68, 68, 0.2)', text: '#EF4444', label: 'Warranty Expired' };
-      default: return { bg: 'rgba(255,255,255,0.1)', text: '#FFF', label: 'Unknown' };
-    }
-  };
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={24} color="#FFF" />
+        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+          <Ionicons name="arrow-back" size={24} color={PALETTE.textBlack} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Asset Intelligence</Text>
+        <View>
+          <Text style={styles.headerTitle}>Asset Intelligence</Text>
+          <Text style={styles.headerSubtitle}>Monitor warranties & lifecycle</Text>
+        </View>
         <TouchableOpacity style={styles.addBtn}>
-          <Ionicons name="add" size={24} color="#0F172A" />
+          <Ionicons name="add" size={24} color="#FFF8DC" />
         </TouchableOpacity>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         
-        {/* Intelligence Summary 3D Card */}
-        <View style={styles.summary3DCard}>
-          <LinearGradient colors={['rgba(56, 189, 248, 0.15)', 'rgba(139, 92, 246, 0.05)']} style={styles.summaryGradient}>
-            <Text style={styles.summaryTitle}>AI Predictive Insights</Text>
-            <View style={styles.insightRow}>
-              <Ionicons name="warning-outline" size={20} color="#F59E0B" />
-              <Text style={styles.insightText}>Honda City insurance & PUC expires in <Text style={{fontWeight:'bold', color:'#FFF'}}>14 days</Text>. Book renewal now to avoid fines.</Text>
+        {/* Insight Banner */}
+        <View style={styles.insightBannerShadow}>
+          <LinearGradient colors={['#A67B5B', '#6F4E37', '#4A2F1D']} style={styles.insightBanner}>
+            <View style={styles.insightIconBox}>
+              <Ionicons name="warning" size={24} color="#FFF8DC" />
             </View>
-            <View style={styles.insightRow}>
-              <Ionicons name="trending-down-outline" size={20} color="#38BDF8" />
-              <Text style={styles.insightText}>Your Samsung TV warranty expired. Based on repair history, consider an extended protection plan.</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.insightTitle}>Action Required</Text>
+              <Text style={styles.insightDesc}>Your Honda City insurance and warranty expires in 15 days.</Text>
             </View>
+            <TouchableOpacity style={styles.insightAction}>
+              <Text style={styles.insightActionText}>Renew</Text>
+            </TouchableOpacity>
           </LinearGradient>
         </View>
 
-        <View style={styles.filterRow}>
-          {['All Assets', 'Appliances', 'Vehicles', 'Electronics'].map((f, i) => (
+        {/* Filters */}
+        <View style={styles.filterScroll}>
+          {['All Assets', 'Appliances', 'Vehicles', 'Electronics'].map((filter, i) => (
             <TouchableOpacity key={i} style={[styles.filterChip, i === 0 && styles.filterChipActive]}>
-              <Text style={[styles.filterText, i === 0 && styles.filterTextActive]}>{f}</Text>
+              <Text style={[styles.filterText, i === 0 && styles.filterTextActive]}>{filter}</Text>
             </TouchableOpacity>
           ))}
         </View>
 
-        <Text style={styles.sectionTitle}>Household Inventory ({DUMMY_ASSETS.length})</Text>
-
-        {DUMMY_ASSETS.map((asset) => {
-          const badge = getStatusBadge(asset.warrantyStatus);
-          return (
+        {/* Asset List */}
+        <View style={styles.assetList}>
+          {DUMMY_ASSETS.map((asset) => (
             <TouchableOpacity key={asset.id} style={styles.assetCard} activeOpacity={0.8}>
-              <LinearGradient colors={asset.color as any} style={styles.assetIconBox}>
-                <Ionicons name={asset.icon as any} size={28} color="#FFF" />
-              </LinearGradient>
+              <View style={styles.assetCardShadow}>
+                <LinearGradient colors={asset.color as any} style={styles.iconGradient}>
+                  <View style={styles.innerWoodBorder}>
+                    <Ionicons name={asset.icon as any} size={28} color="#FFF8DC" style={styles.woodIconShadow} />
+                  </View>
+                </LinearGradient>
+              </View>
               
               <View style={styles.assetInfo}>
-                <Text style={styles.assetName}>{asset.name}</Text>
-                <Text style={styles.assetBrand}>{asset.category} • {asset.brand}</Text>
+                <Text style={styles.assetName} numberOfLines={1}>{asset.name}</Text>
+                <Text style={styles.assetBrand}>{asset.brand} • {asset.category}</Text>
                 
-                <View style={styles.metaRow}>
+                <View style={styles.priceRow}>
                   <Text style={styles.assetPrice}>{asset.price}</Text>
-                  <View style={[styles.badge, { backgroundColor: badge.bg }]}>
-                    <Text style={[styles.badgeText, { color: badge.text }]}>{badge.label}</Text>
-                  </View>
+                  
+                  {asset.warrantyStatus === 'active' && (
+                    <View style={[styles.statusBadge, { backgroundColor: 'rgba(16, 185, 129, 0.1)' }]}>
+                      <Ionicons name="checkmark-circle" size={12} color="#10B981" />
+                      <Text style={[styles.statusText, { color: '#10B981' }]}>Active</Text>
+                    </View>
+                  )}
+                  {asset.warrantyStatus === 'expiring_soon' && (
+                    <View style={[styles.statusBadge, { backgroundColor: 'rgba(245, 158, 11, 0.1)' }]}>
+                      <Ionicons name="time" size={12} color="#D97706" />
+                      <Text style={[styles.statusText, { color: '#D97706' }]}>Expiring Soon</Text>
+                    </View>
+                  )}
+                  {asset.warrantyStatus === 'expired' && (
+                    <View style={[styles.statusBadge, { backgroundColor: 'rgba(239, 68, 68, 0.1)' }]}>
+                      <Ionicons name="alert-circle" size={12} color="#DC2626" />
+                      <Text style={[styles.statusText, { color: '#DC2626' }]}>Expired</Text>
+                    </View>
+                  )}
                 </View>
               </View>
             </TouchableOpacity>
-          );
-        })}
+          ))}
+        </View>
 
-        <View style={{ height: 100 }} />
       </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#07090F' },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 60, paddingHorizontal: 24, paddingBottom: 20, backgroundColor: 'rgba(7, 9, 15, 0.9)' },
-  backBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.05)', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
-  headerTitle: { color: '#FFF', fontSize: 20, fontWeight: '800' },
-  addBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#38BDF8', justifyContent: 'center', alignItems: 'center', shadowColor: '#38BDF8', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 8 },
+  container: { flex: 1, backgroundColor: PALETTE.bg },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 60, paddingHorizontal: 24, paddingBottom: 16, backgroundColor: PALETTE.bg, borderBottomWidth: 1, borderBottomColor: 'rgba(74, 47, 29, 0.1)' },
+  backBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: PALETTE.white, justifyContent: 'center', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 2, borderWidth: 1, borderColor: 'rgba(74, 47, 29, 0.1)' },
+  headerTitle: { color: PALETTE.textBlack, fontSize: 22, fontWeight: '900', fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
+  headerSubtitle: { color: PALETTE.woodMedium, fontSize: 13, fontWeight: '600', marginTop: 2 },
+  addBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: PALETTE.woodDark, justifyContent: 'center', alignItems: 'center', shadowColor: '#4A2F1D', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4 },
   
-  scrollContent: { padding: 24 },
+  scrollContent: { padding: 24, paddingBottom: 100 },
   
-  summary3DCard: { 
-    borderRadius: 24, 
-    borderWidth: 1, borderColor: 'rgba(56, 189, 248, 0.3)', 
-    overflow: 'hidden', marginBottom: 24,
-    transform: [{ perspective: 1000 }, { rotateX: '2deg' }],
-    shadowColor: '#38BDF8', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.15, shadowRadius: 20,
-    elevation: 10
-  },
-  summaryGradient: { padding: 24 },
-  summaryTitle: { color: '#FFF', fontSize: 18, fontWeight: '800', marginBottom: 16 },
-  insightRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginBottom: 12, backgroundColor: 'rgba(0,0,0,0.3)', padding: 12, borderRadius: 12 },
-  insightText: { color: '#94A3B8', fontSize: 13, lineHeight: 20, flex: 1 },
+  insightBannerShadow: { borderRadius: 20, shadowColor: '#4A2F1D', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 8, marginBottom: 32 },
+  insightBanner: { flexDirection: 'row', alignItems: 'center', padding: 20, borderRadius: 20, gap: 16 },
+  insightIconBox: { width: 48, height: 48, borderRadius: 24, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.4)' },
+  insightTitle: { color: '#FFF8DC', fontSize: 16, fontWeight: '800', marginBottom: 4 },
+  insightDesc: { color: '#E5D3B3', fontSize: 13, lineHeight: 18 },
+  insightAction: { backgroundColor: '#FFF8DC', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, shadowColor: '#000', shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.2, shadowRadius: 4, elevation: 2 },
+  insightActionText: { color: PALETTE.woodDark, fontSize: 14, fontWeight: '800' },
 
-  filterRow: { flexDirection: 'row', gap: 12, marginBottom: 24 },
-  filterChip: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
-  filterChipActive: { backgroundColor: 'rgba(56, 189, 248, 0.15)', borderColor: '#38BDF8' },
-  filterText: { color: '#94A3B8', fontSize: 14, fontWeight: '600' },
-  filterTextActive: { color: '#38BDF8' },
+  filterScroll: { flexDirection: 'row', gap: 12, marginBottom: 24 },
+  filterChip: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 20, backgroundColor: PALETTE.white, borderWidth: 1, borderColor: 'rgba(74, 47, 29, 0.2)', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 },
+  filterChipActive: { backgroundColor: PALETTE.woodMedium, borderColor: PALETTE.woodDark },
+  filterText: { color: PALETTE.textMuted, fontSize: 14, fontWeight: '600' },
+  filterTextActive: { color: '#FFF8DC', fontWeight: '800' },
 
-  sectionTitle: { color: '#FFF', fontSize: 20, fontWeight: '800', marginBottom: 16 },
-
-  assetCard: { 
-    flexDirection: 'row', alignItems: 'center', padding: 16, marginBottom: 16,
-    backgroundColor: 'rgba(15, 23, 42, 0.6)', borderRadius: 24,
-    borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.05)',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8
-  },
-  assetIconBox: { width: 64, height: 64, borderRadius: 20, justifyContent: 'center', alignItems: 'center', marginRight: 16 },
-  assetInfo: { flex: 1 },
-  assetName: { color: '#FFF', fontSize: 16, fontWeight: '700', marginBottom: 4 },
-  assetBrand: { color: '#64748B', fontSize: 13, marginBottom: 12 },
-  metaRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  assetPrice: { color: '#E2E8F0', fontSize: 15, fontWeight: '800' },
-  badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
-  badgeText: { fontSize: 11, fontWeight: '800', textTransform: 'uppercase' },
+  assetList: { gap: 16 },
+  assetCard: { flexDirection: 'row', backgroundColor: PALETTE.white, padding: 16, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(74, 47, 29, 0.1)', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 3 },
+  assetCardShadow: { borderRadius: 16, shadowColor: '#4A2F1D', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 4, marginRight: 16 },
+  iconGradient: { width: 80, height: 80, borderRadius: 16, padding: 3 },
+  innerWoodBorder: { flex: 1, backgroundColor: 'rgba(0,0,0,0.1)', borderRadius: 13, justifyContent: 'center', alignItems: 'center' },
+  woodIconShadow: { textShadowColor: 'rgba(0,0,0,0.5)', textShadowOffset: {width: 0, height: 2}, textShadowRadius: 4 },
+  
+  assetInfo: { flex: 1, justifyContent: 'center' },
+  assetName: { color: PALETTE.textBlack, fontSize: 16, fontWeight: '800', marginBottom: 4 },
+  assetBrand: { color: PALETTE.textMuted, fontSize: 13, fontWeight: '500', marginBottom: 12 },
+  
+  priceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  assetPrice: { color: PALETTE.textBlack, fontSize: 15, fontWeight: '800' },
+  
+  statusBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
+  statusText: { fontSize: 11, fontWeight: '700', textTransform: 'uppercase' },
 });

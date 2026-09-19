@@ -5,15 +5,15 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 const { width } = Dimensions.get('window');
 
-// Luxury Wood & Gold Palette
+// Light Brown Wood, Cream, Black Palette
 const PALETTE = {
-  bg: '#F9F6F0', // Warm cream/sand
-  woodDark: '#2D1B15', // Deep espresso wood
-  woodLight: '#4E342E', // Walnut
-  gold: '#D4AF37', // Metallic gold
-  textDark: '#1C1C1C',
-  textMuted: '#795548',
-  white: '#FFFFFF',
+  bg: '#FAF6F0', // Cream
+  woodDark: '#4A2F1D', // Dark Wood
+  woodLight: '#D4A373', // Light Wood (for cards/borders)
+  gold: '#8B5E34', // Medium Wood (Replacing gold variable)
+  textDark: '#1A1A1A', // Black text
+  textMuted: '#5C4033', // Deep Brown Muted
+  white: '#FFFFFF', // Used for pure white cards
 };
 
 const FEATURE_MODULES = [
@@ -110,9 +110,9 @@ export default function AllFeaturesScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: PALETTE.bg },
-  header: { paddingTop: 70, paddingHorizontal: 24, paddingBottom: 24, backgroundColor: PALETTE.bg, borderBottomWidth: 1, borderBottomColor: 'rgba(78, 52, 46, 0.1)' },
-  headerTitle: { color: PALETTE.woodDark, fontSize: 34, fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif', fontWeight: 'bold' },
-  headerSubtitle: { color: PALETTE.textMuted, fontSize: 15, marginTop: 4, fontStyle: 'italic' },
+  header: { paddingTop: 70, paddingHorizontal: 24, paddingBottom: 24, backgroundColor: PALETTE.bg, borderBottomWidth: 1, borderBottomColor: 'rgba(74, 47, 29, 0.1)' },
+  headerTitle: { color: PALETTE.textDark, fontSize: 32, fontWeight: 'bold' },
+  headerSubtitle: { color: PALETTE.gold, fontSize: 15, marginTop: 4 },
   
   scrollContent: { padding: 20 },
   
@@ -121,24 +121,23 @@ const styles = StyleSheet.create({
     shadowColor: PALETTE.woodDark, shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.2, shadowRadius: 16, elevation: 10
   },
   bannerIcon: { marginRight: 16 },
-  bannerTitle: { color: PALETTE.gold, fontSize: 18, fontWeight: '700', letterSpacing: 1 },
-  bannerDesc: { color: PALETTE.white, fontSize: 14, marginTop: 4, opacity: 0.9 },
+  bannerTitle: { color: PALETTE.bg, fontSize: 18, fontWeight: '700', letterSpacing: 1 },
+  bannerDesc: { color: '#FFF', fontSize: 14, marginTop: 4, opacity: 0.9 },
 
   section: { marginBottom: 32 },
-  sectionTitle: { color: PALETTE.woodLight, fontSize: 20, fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif', fontWeight: 'bold', marginBottom: 16, borderLeftWidth: 3, borderLeftColor: PALETTE.gold, paddingLeft: 12 },
+  sectionTitle: { color: PALETTE.textDark, fontSize: 20, fontWeight: 'bold', marginBottom: 16, borderLeftWidth: 3, borderLeftColor: PALETTE.gold, paddingLeft: 12 },
   
-  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 12 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
   
   card: {
-    width: (width - 52) / 2, // 2 columns with gaps
-    backgroundColor: PALETTE.white, padding: 16, borderRadius: 16, marginBottom: 4,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
-    borderWidth: 1, borderColor: 'rgba(212, 175, 55, 0.2)', // Subtle gold border
+    width: (width - 56) / 2, // Accounting for padding (20+20) and gap (16)
+    backgroundColor: PALETTE.white, padding: 16, borderRadius: 16, marginBottom: 16,
+    borderWidth: 1, borderColor: 'rgba(74, 47, 29, 0.15)', // Wood border
   },
   iconRing: {
-    width: 44, height: 44, borderRadius: 22, backgroundColor: PALETTE.bg,
+    width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(74, 47, 29, 0.05)',
     justifyContent: 'center', alignItems: 'center', marginBottom: 12,
-    borderWidth: 1, borderColor: 'rgba(78, 52, 46, 0.1)'
+    borderWidth: 1, borderColor: 'rgba(74, 47, 29, 0.1)'
   },
   featureTitle: { color: PALETTE.textDark, fontSize: 15, fontWeight: '700', marginBottom: 4 },
   featureDesc: { color: PALETTE.textMuted, fontSize: 12, lineHeight: 16 },

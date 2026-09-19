@@ -7,13 +7,13 @@ import { LinearGradient } from 'expo-linear-gradient';
 const { width } = Dimensions.get('window');
 
 const PALETTE = {
-  bg: '#F9F6F0',
-  woodDark: '#2D1B15',
-  woodLight: '#4E342E',
-  gold: '#D4AF37',
-  goldLight: '#F3E5AB',
-  textDark: '#1C1C1C',
-  textMuted: '#795548',
+  bg: '#FAF6F0',
+  woodDark: '#4A2F1D',
+  woodLight: '#D4A373',
+  gold: '#8B5E34',
+  goldLight: '#A67B5B',
+  textDark: '#1A1A1A',
+  textMuted: '#5C4033',
   white: '#FFFFFF',
 };
 
@@ -230,10 +230,17 @@ export default function SetupWizard() {
           <TouchableOpacity 
             style={styles.primaryBtn} 
             onPress={() => step === 3 ? handleComplete() : setStep(step + 1)}
+            activeOpacity={0.9}
           >
-            <LinearGradient colors={[PALETTE.woodLight, PALETTE.woodDark]} style={styles.btnGradient}>
-              <Text style={styles.btnText}>{step === 3 ? 'Secure & Enter Vault' : 'Continue'}</Text>
-              <Ionicons name="arrow-forward" size={20} color={PALETTE.gold} />
+            <LinearGradient 
+              colors={['#A67B5B', '#6F4E37', '#4A2F1D']} 
+              locations={[0, 0.5, 1]}
+              style={styles.btnGradient}
+            >
+              <View style={styles.btnInner}>
+                <Text style={styles.btnText}>{step === 3 ? 'Secure & Enter Vault' : 'Continue'}</Text>
+                <Ionicons name="arrow-forward" size={20} color="#FFF8DC" />
+              </View>
             </LinearGradient>
           </TouchableOpacity>
         </View>
@@ -245,56 +252,58 @@ export default function SetupWizard() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: PALETTE.bg },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 60, paddingHorizontal: 24, paddingBottom: 16 },
-  backBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: PALETTE.white, justifyContent: 'center', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 },
-  headerTitle: { color: PALETTE.woodDark, fontSize: 18, fontWeight: 'bold', fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
+  backBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: PALETTE.white, justifyContent: 'center', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 2 },
+  headerTitle: { color: PALETTE.textDark, fontSize: 18, fontWeight: 'bold' },
   
-  progressContainer: { paddingHorizontal: 24, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(78, 52, 46, 0.1)' },
-  progressBarBg: { height: 6, backgroundColor: 'rgba(78, 52, 46, 0.1)', borderRadius: 3, overflow: 'hidden', marginBottom: 8 },
-  progressBarFill: { height: '100%', backgroundColor: PALETTE.gold, borderRadius: 3 },
+  progressContainer: { paddingHorizontal: 24, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(74, 47, 29, 0.1)' },
+  progressBarBg: { height: 6, backgroundColor: 'rgba(74, 47, 29, 0.1)', borderRadius: 3, overflow: 'hidden', marginBottom: 8 },
+  progressBarFill: { height: '100%', backgroundColor: PALETTE.woodDark, borderRadius: 3 },
   progressText: { color: PALETTE.textMuted, fontSize: 13, fontWeight: '600', textAlign: 'right' },
 
   scrollContent: { padding: 24 },
   
   stepContainer: { flex: 1 },
-  stepTitle: { color: PALETTE.woodDark, fontSize: 28, fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif', fontWeight: 'bold', marginBottom: 8 },
+  stepTitle: { color: PALETTE.woodDark, fontSize: 28, fontWeight: 'bold', marginBottom: 8 },
   stepDesc: { color: PALETTE.textMuted, fontSize: 15, lineHeight: 22, marginBottom: 32 },
 
   inputGroup: { marginBottom: 24 },
-  label: { color: PALETTE.woodLight, fontSize: 14, fontWeight: '700', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 },
-  input: { backgroundColor: PALETTE.white, borderWidth: 1, borderColor: 'rgba(78, 52, 46, 0.2)', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14, fontSize: 16, color: PALETTE.textDark },
+  label: { color: PALETTE.woodDark, fontSize: 14, fontWeight: '700', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 },
+  input: { backgroundColor: PALETTE.white, borderWidth: 1, borderColor: 'rgba(74, 47, 29, 0.2)', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14, fontSize: 16, color: PALETTE.textDark },
 
-  counterRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: PALETTE.white, padding: 16, borderRadius: 16, marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 1 },
+  counterRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: PALETTE.white, padding: 16, borderRadius: 16, marginBottom: 12, borderWidth: 1, borderColor: 'rgba(74, 47, 29, 0.1)', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 1 },
   counterLabel: { color: PALETTE.textDark, fontSize: 16, fontWeight: '600' },
   counterControls: { flexDirection: 'row', alignItems: 'center', gap: 16 },
-  counterBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: PALETTE.woodLight, justifyContent: 'center', alignItems: 'center' },
-  counterValue: { fontSize: 18, fontWeight: 'bold', color: PALETTE.woodDark, width: 24, textAlign: 'center' },
+  counterBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: PALETTE.gold, justifyContent: 'center', alignItems: 'center' },
+  counterValue: { fontSize: 18, fontWeight: 'bold', color: PALETTE.textDark, width: 24, textAlign: 'center' },
 
-  roomCard: { backgroundColor: PALETTE.white, borderRadius: 16, padding: 16, marginBottom: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 1, borderWidth: 1, borderColor: 'rgba(212, 175, 55, 0.2)' },
+  roomCard: { backgroundColor: PALETTE.white, borderRadius: 16, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: 'rgba(74, 47, 29, 0.2)' },
   roomTitle: { color: PALETTE.woodDark, fontSize: 16, fontWeight: 'bold', marginBottom: 12 },
   applianceGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  applianceChip: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, backgroundColor: PALETTE.bg, borderWidth: 1, borderColor: 'rgba(78, 52, 46, 0.1)', gap: 6 },
-  applianceChipSelected: { backgroundColor: 'rgba(212, 175, 55, 0.15)', borderColor: PALETTE.gold },
+  applianceChip: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, backgroundColor: PALETTE.bg, borderWidth: 1, borderColor: 'rgba(74, 47, 29, 0.2)', gap: 6 },
+  applianceChipSelected: { backgroundColor: 'rgba(139, 94, 52, 0.1)', borderColor: PALETTE.gold },
   applianceText: { color: PALETTE.textMuted, fontSize: 14 },
 
-  familyCard: { backgroundColor: PALETTE.white, borderRadius: 16, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: 'rgba(78, 52, 46, 0.1)' },
+  familyCard: { backgroundColor: PALETTE.white, borderRadius: 16, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: 'rgba(74, 47, 29, 0.2)' },
   familyHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  familyTitle: { color: PALETTE.woodDark, fontSize: 15, fontWeight: 'bold' },
+  familyTitle: { color: PALETTE.textDark, fontSize: 15, fontWeight: 'bold' },
   roleGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  roleChip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12, backgroundColor: PALETTE.bg, borderWidth: 1, borderColor: 'rgba(78, 52, 46, 0.1)' },
-  roleChipSelected: { backgroundColor: PALETTE.woodLight, borderColor: PALETTE.woodDark },
+  roleChip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12, backgroundColor: PALETTE.bg, borderWidth: 1, borderColor: 'rgba(74, 47, 29, 0.2)' },
+  roleChipSelected: { backgroundColor: PALETTE.gold, borderColor: PALETTE.woodDark },
   roleText: { color: PALETTE.textMuted, fontSize: 13, fontWeight: '600' },
 
-  addFamilyBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 16, borderRadius: 16, borderStyle: 'dashed', borderWidth: 2, borderColor: 'rgba(78, 52, 46, 0.3)', gap: 8 },
+  addFamilyBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 16, borderRadius: 16, borderStyle: 'dashed', borderWidth: 2, borderColor: 'rgba(74, 47, 29, 0.4)', gap: 8 },
   addFamilyText: { color: PALETTE.woodDark, fontSize: 16, fontWeight: 'bold' },
 
-  footer: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 24, backgroundColor: PALETTE.bg, borderTopWidth: 1, borderTopColor: 'rgba(78, 52, 46, 0.1)' },
-  primaryBtn: { borderRadius: 16, overflow: 'hidden', shadowColor: PALETTE.woodDark, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4 },
-  btnGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 18, gap: 12 },
-  btnText: { color: PALETTE.gold, fontSize: 16, fontWeight: 'bold', letterSpacing: 1 },
+  // Fixed footer and added massive wood button
+  footer: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 24, backgroundColor: PALETTE.bg, borderTopWidth: 1, borderTopColor: 'rgba(74, 47, 29, 0.1)' },
+  primaryBtn: { borderRadius: 20, shadowColor: '#4A2F1D', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.4, shadowRadius: 12, elevation: 8 },
+  btnGradient: { borderRadius: 20, padding: 2 },
+  btnInner: { backgroundColor: 'rgba(0,0,0,0.1)', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 18, borderRadius: 18, gap: 12 },
+  btnText: { color: '#FFF8DC', fontSize: 18, fontWeight: '900', letterSpacing: 1.5, textShadowColor: 'rgba(0,0,0,0.6)', textShadowOffset: {width: 0, height: 2}, textShadowRadius: 4 },
 
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 100 },
-  loadingTitle: { color: PALETTE.woodDark, fontSize: 24, fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif', fontWeight: 'bold', marginBottom: 12 },
+  loadingTitle: { color: PALETTE.woodDark, fontSize: 24, fontWeight: 'bold', marginBottom: 12 },
   loadingDesc: { color: PALETTE.textMuted, fontSize: 15, textAlign: 'center', paddingHorizontal: 32, marginBottom: 48, lineHeight: 22 },
-  spinnerRow: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: PALETTE.white, paddingHorizontal: 20, paddingVertical: 16, borderRadius: 16, marginBottom: 16, width: '100%', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 1 },
-  spinnerText: { color: PALETTE.woodDark, fontSize: 14, fontWeight: '600', flex: 1 },
+  spinnerRow: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: PALETTE.white, paddingHorizontal: 20, paddingVertical: 16, borderRadius: 16, marginBottom: 16, width: '100%', borderWidth: 1, borderColor: 'rgba(74, 47, 29, 0.2)' },
+  spinnerText: { color: PALETTE.textDark, fontSize: 14, fontWeight: '600', flex: 1 },
 });

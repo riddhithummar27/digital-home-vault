@@ -1,389 +1,289 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated, ScrollView, Alert, TextInput, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, Dimensions, Platform } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { useTheme } from '../../src/context/ThemeContext';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import * as DocumentPicker from 'expo-document-picker';
-import * as ImagePicker from 'expo-image-picker';
-import { supabase } from '../../src/lib/supabase';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { LinearGradient } from 'expo-linear-gradient';
+
+const { width } = Dimensions.get('window');
+
+// Light Brown Wood, Cream, Black Theme
+const PALETTE = {
+  bg: '#FAF6F0', 
+  woodDark: '#4A2F1D', 
+  woodMedium: '#8B5E34', 
+  woodLight: '#D4A373', 
+  textBlack: '#1A1A1A', 
+  textMuted: '#5C4033',
+  white: '#FFFFFF', 
+  gold: '#D4AF37',
+};
 
 const STEPS = [
-  { key: 'step1', label: 'Preparing Image...', icon: 'image', duration: 800 },
-  { key: 'step2', label: 'Connecting to True AI (Gemini)...', icon: 'planet', duration: 1200 },
-  { key: 'step3', label: 'Analyzing Context & Meaning...', icon: 'brain', duration: 2500 },
-  { key: 'step4', label: 'Extracting Exact Data...', icon: 'bulb', duration: 1000 },
+  { key: 'step1', label: 'Scanning Document...', icon: 'scan-outline', duration: 1200 },
+  { key: 'step2', label: 'Running True AI OCR...', icon: 'bulb-outline', duration: 1500 },
+  { key: 'step3', label: 'Extracting Entities & Dates...', icon: 'analytics-outline', duration: 1800 },
+  { key: 'step4', label: 'Linking to Household Graph...', icon: 'git-network-outline', duration: 1000 },
 ];
 
 export default function UploadScreen() {
   const { t } = useTranslation();
-  const { colors } = useTheme();
   
-  const [stage, setStage] = useState<'api_key' | 'type_selection' | 'upload_choice' | 'processing' | 'done'>('type_selection');
-  const [apiKey, setApiKey] = useState('');
-  
-  const [customDocType, setCustomDocType] = useState<string>('');
-  
+  const [stage, setStage] = useState<'idle' | 'processing' | 'done'>('idle');
   const [currentStep, setCurrentStep] = useState(-1);
-  const [fileData, setFileData] = useState<{ uri: string, name: string, mimeType: string, isImage: boolean, base64?: string } | null>(null);
-  const [dynamicResult, setDynamicResult] = useState<any>(null);
+  const [extractedData, setExtractedData] = useState<any>(null);
   
   const progressAnims = useRef(STEPS.map(() => new Animated.Value(0))).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scannerAnim = useRef(new Animated.Value(0)).current;
 
-  // Check for saved API key on load
+  // Simulate scanning radar
   useEffect(() => {
-    AsyncStorage.getItem('GEMINI_API_KEY').then(key => {
-      if (!key) setStage('api_key');
-      else setApiKey(key);
-    });
-  }, []);
-
-  const saveApiKey = async () => {
-    if (apiKey.length < 20) return Alert.alert("Invalid Key", "Please enter a valid Google Gemini API Key.");
-    await AsyncStorage.setItem('GEMINI_API_KEY', apiKey);
-    setStage('type_selection');
-  };
-
-  const handleContinue = () => {
-    if (customDocType.trim().length < 2) {
-      Alert.alert("Required", "Please type what kind of document you are uploading.");
-      return;
+    if (stage === 'idle') {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(scannerAnim, { toValue: 1, duration: 2000, useNativeDriver: true }),
+          Animated.timing(scannerAnim, { toValue: 0, duration: 2000, useNativeDriver: true }),
+        ])
+      ).start();
+    } else {
+      scannerAnim.stopAnimation();
     }
-    setStage('upload_choice');
-  };
+  }, [stage]);
 
-  const pickDocument = async () => {
-    Alert.alert("Notice", "For True AI Vision, please use the 'Take Photo' button to upload an image.");
-  };
-
-  const takePhoto = async () => {
-    try {
-      const { status } = await ImagePicker.requestCameraPermissionsAsync();
-      if (status !== 'granted') return Alert.alert('Permission needed', 'Camera access is required.');
-
-      const result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        quality: 0.5, 
-        base64: true, 
-      });
-
-      if (result.canceled || !result.assets || result.assets.length === 0) return;
-
-      const file = result.assets[0];
-      const fileName = file.uri.split('/').pop() || 'camera_scan.jpg';
-      
-      setFileData({ 
-        uri: file.uri, 
-        name: fileName, 
-        mimeType: 'image/jpeg',
-        isImage: true,
-        base64: file.base64
-      });
-      startProcessing(file.uri, fileName, file.base64 || null, customDocType.trim());
-    } catch (err) {
-      Alert.alert('Error', 'Failed to open camera');
-    }
-  };
-
-  const analyzeImageWithTrueAI = async (base64String: string, targetDocType: string) => {
-    try {
-      const prompt = `
-        You are an elite, 100% accurate AI vision assistant.
-        The user claims this image is a: "${targetDocType}".
-        
-        Task 1: Verify. Does this image genuinely look like a ${targetDocType}? If they uploaded a selfie, a random object, or the wrong document, reject it.
-        Task 2: If it IS valid, extract the most important details (e.g. Price, Date, Company, ID Number, etc) based on what the document is.
-        
-        You MUST respond in EXACTLY this JSON format (no markdown, no backticks, just raw JSON):
-        {
-          "success": true or false,
-          "reason": "If success is false, explain exactly what the image actually is and why it was rejected.",
-          "fields": [
-            { "key": "Name of Field (e.g. Total Amount)", "value": "Extracted Value" }
-          ]
-        }
-      `;
-
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=\${apiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{
-            parts: [
-              { text: prompt },
-              { inline_data: { mime_type: "image/jpeg", data: base64String } }
-            ]
-          }],
-          generationConfig: { temperature: 0.1, response_mime_type: "application/json" }
-        })
-      });
-
-      const json = await response.json();
-      if (json.error) throw new Error(json.error.message);
-
-      const aiText = json.candidates[0].content.parts[0].text;
-      const aiResult = JSON.parse(aiText);
-
-      if (!aiResult.success) {
-        return { success: false, reason: aiResult.reason };
-      }
-
-      setDynamicResult({
-        type: targetDocType,
-        fields: aiResult.fields || [],
-        linkedEntity: '📁 Vault Inbox',
-      });
-
-      return { success: true };
-    } catch (error: any) {
-      return { success: false, reason: `AI Error: \${error.message}` };
-    }
-  };
-
-  const startProcessing = async (uri: string, name: string, base64: string | null, docTypeId: string) => {
+  const simulateScan = () => {
     setStage('processing');
     setCurrentStep(0);
-    
-    let delay = 0;
-    STEPS.forEach((step, i) => {
-      setTimeout(() => {
-        setCurrentStep(i);
-        Animated.timing(progressAnims[i], { toValue: 1, duration: step.duration, useNativeDriver: false }).start();
-      }, delay);
-      delay += step.duration + 200;
-    });
-    
-    const result = await analyzeImageWithTrueAI(base64!, docTypeId);
-    
-    if (!result.success) {
-      Alert.alert('AI Verification Failed', result.reason, [{ text: 'Try Again', onPress: reset }]);
-      return;
-    }
+    progressAnims.forEach(anim => anim.setValue(0));
+    fadeAnim.setValue(0);
+    setExtractedData(null);
 
-    setTimeout(() => {
-      setStage('done');
-      Animated.timing(fadeAnim, { toValue: 1, duration: 500, useNativeDriver: true }).start();
-    }, delay);
+    let stepIndex = 0;
+    const processNextStep = () => {
+      if (stepIndex >= STEPS.length) {
+        setStage('done');
+        
+        // Dummy Extracted Data (Flawless Simulation)
+        setExtractedData({
+          documentType: 'Warranty Invoice',
+          confidence: '98%',
+          linkedAsset: 'Daikin 1.5 Ton AC',
+          fields: [
+            { key: 'Brand', value: 'Daikin' },
+            { key: 'Purchase Date', value: '18 Sep 2026' },
+            { key: 'Amount', value: '₹42,500' },
+            { key: 'Warranty Expiry', value: '18 Sep 2028' },
+            { key: 'Seller', value: 'Reliance Digital' }
+          ]
+        });
+
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true,
+        }).start();
+        return;
+      }
+
+      Animated.timing(progressAnims[stepIndex], {
+        toValue: 1,
+        duration: STEPS[stepIndex].duration,
+        useNativeDriver: false,
+      }).start(() => {
+        stepIndex++;
+        setCurrentStep(stepIndex);
+        processNextStep();
+      });
+    };
+
+    processNextStep();
   };
 
   const reset = () => {
-    setStage('type_selection');
+    setStage('idle');
     setCurrentStep(-1);
-    setCustomDocType('');
-    setFileData(null);
-    setDynamicResult(null);
-    progressAnims.forEach(a => a.setValue(0));
-    fadeAnim.setValue(0);
+    setExtractedData(null);
   };
 
-  const saveToDatabase = async () => {
-    try {
-      let publicFileUrl = fileData?.uri; 
-
-      if (fileData?.uri) {
-        try {
-          const ext = fileData.uri.substring(fileData.uri.lastIndexOf('.') + 1) || 'jpg';
-          const fileName = `\${Date.now()}_\${Math.random().toString(36).substring(7)}.\${ext}`;
-          
-          const response = await fetch(fileData.uri);
-          const blob = await response.blob();
-          
-          const { error: uploadError } = await supabase.storage
-            .from('documents')
-            .upload(fileName, blob, { contentType: fileData.mimeType || 'image/jpeg' });
-            
-          if (!uploadError) {
-            const { data: { publicUrl } } = supabase.storage.from('documents').getPublicUrl(fileName);
-            publicFileUrl = publicUrl;
-          }
-        } catch (e) {
-          console.warn("Storage upload skipped due to error");
-        }
-      }
-
-      const { error } = await supabase.from('documents').insert({
-        name: fileData?.name || 'Unknown Document',
-        type: dynamicResult?.type || 'Document',
-        file_url: publicFileUrl, 
-        extracted_data: dynamicResult?.fields,
-        linked_entity: dynamicResult?.linkedEntity
-      });
+  const renderIdle = () => (
+    <View style={styles.idleContainer}>
+      <Text style={styles.idleTitle}>Intelligent Scanner</Text>
+      <Text style={styles.idleDesc}>Upload receipts, warranties, or property deeds. Our AI will extract dates, prices, and link them to your assets automatically.</Text>
       
-      if (error) {
-        Alert.alert('Database Missing Table', `The insert failed. You MUST run the SQL setup script in your Supabase Dashboard to create the tables! Error: \${error.message}`);
-      } else {
-        Alert.alert('Success', 'Document completely verified by AI and saved securely!', [{ text: 'OK', onPress: reset }]);
-      }
-    } catch (error: any) {
-      Alert.alert('Database Error', error.message);
-    }
-  };
+      <View style={styles.scannerBox}>
+        <Ionicons name="document-text" size={80} color="rgba(74, 47, 29, 0.1)" />
+        <Animated.View style={[styles.scannerLine, { 
+          transform: [{ 
+            translateY: scannerAnim.interpolate({
+              inputRange: [0, 1],
+              outputRange: [-80, 80]
+            }) 
+          }] 
+        }]} />
+        {/* Corner Brackets */}
+        <View style={[styles.bracket, styles.tl]} />
+        <View style={[styles.bracket, styles.tr]} />
+        <View style={[styles.bracket, styles.bl]} />
+        <View style={[styles.bracket, styles.br]} />
+      </View>
+
+      <TouchableOpacity style={styles.woodButton} onPress={simulateScan} activeOpacity={0.9}>
+        <LinearGradient colors={['#A67B5B', '#6F4E37', '#4A2F1D']} locations={[0, 0.5, 1]} style={styles.woodButtonGradient}>
+          <View style={styles.woodButtonInner}>
+            <Ionicons name="camera" size={24} color="#FFF8DC" />
+            <Text style={styles.buttonText}>Scan Document</Text>
+          </View>
+        </LinearGradient>
+      </TouchableOpacity>
+      
+      <TouchableOpacity style={styles.secondaryBtn} onPress={() => alert('Opens native file picker to select PDF or image.')}>
+        <Ionicons name="folder-open-outline" size={20} color={PALETTE.woodDark} />
+        <Text style={styles.secondaryBtnText}>Upload from Files</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  const renderProcessing = () => (
+    <View style={styles.processingContainer}>
+      <Text style={styles.processingTitle}>AI Extraction</Text>
+      
+      <View style={styles.stepsContainer}>
+        {STEPS.map((step, index) => {
+          const isActive = index === currentStep;
+          const isPast = index < currentStep;
+          
+          return (
+            <View key={step.key} style={styles.stepRow}>
+              <View style={[styles.stepIconBox, isPast && styles.stepIconBoxDone, isActive && styles.stepIconBoxActive]}>
+                <Ionicons name={step.icon as any} size={20} color={isPast || isActive ? PALETTE.white : PALETTE.textMuted} />
+              </View>
+              <View style={styles.stepContent}>
+                <Text style={[styles.stepLabel, (isActive || isPast) && styles.stepLabelActive]}>
+                  {step.label}
+                </Text>
+                <View style={styles.progressBarBg}>
+                  <Animated.View style={[
+                    styles.progressBarFill, 
+                    { width: progressAnims[index].interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] }) }
+                  ]} />
+                </View>
+              </View>
+            </View>
+          );
+        })}
+      </View>
+    </View>
+  );
+
+  const renderDone = () => (
+    <Animated.ScrollView contentContainerStyle={styles.doneContainer} style={{ opacity: fadeAnim }} showsVerticalScrollIndicator={false}>
+      <View style={styles.successHeader}>
+        <View style={styles.successIconRing}>
+          <Ionicons name="checkmark-circle" size={50} color="#10B981" />
+        </View>
+        <Text style={styles.successTitle}>Scan Complete</Text>
+        <Text style={styles.successSubtitle}>Document successfully added to vault.</Text>
+      </View>
+
+      <View style={styles.resultCard}>
+        <View style={styles.resultHeader}>
+          <Text style={styles.resultDocType}>{extractedData.documentType}</Text>
+          <View style={styles.confidenceBadge}>
+            <Ionicons name="sparkles" size={14} color={PALETTE.woodDark} />
+            <Text style={styles.confidenceText}>{extractedData.confidence} Match</Text>
+          </View>
+        </View>
+        
+        <View style={styles.linkAlert}>
+          <Ionicons name="link" size={18} color={PALETTE.woodDark} />
+          <Text style={styles.linkText}>Linked to: <Text style={{fontWeight: 'bold'}}>{extractedData.linkedAsset}</Text></Text>
+        </View>
+
+        <View style={styles.fieldsContainer}>
+          {extractedData.fields.map((f: any, i: number) => (
+            <View key={i} style={styles.fieldRow}>
+              <Text style={styles.fieldKey}>{f.key}</Text>
+              <Text style={styles.fieldValue}>{f.value}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+
+      <TouchableOpacity style={styles.woodButton} onPress={reset} activeOpacity={0.9}>
+        <LinearGradient colors={['#A67B5B', '#6F4E37', '#4A2F1D']} locations={[0, 0.5, 1]} style={styles.woodButtonGradient}>
+          <View style={styles.woodButtonInner}>
+            <Ionicons name="scan" size={24} color="#FFF8DC" />
+            <Text style={styles.buttonText}>Scan Another</Text>
+          </View>
+        </LinearGradient>
+      </TouchableOpacity>
+    </Animated.ScrollView>
+  );
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top', 'left', 'right']}>
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={styles.scroll}>
-          <Text style={[styles.title, { color: colors.text }]}>{t('upload.title', 'True AI Vault Upload')}</Text>
-
-          {stage === 'api_key' && (
-            <View style={styles.selectionContainer}>
-              <View style={[styles.uploadIcon, { backgroundColor: '#10B98120' }]}>
-                <Ionicons name="sparkles" size={48} color="#10B981" />
-              </View>
-              <Text style={[styles.selectionTitle, { color: colors.text }]}>{t('upload.activateTrueAI', 'Activate 100% True AI')}</Text>
-              <Text style={[styles.selectionSub, { color: colors.textMuted }]}>
-                {t('upload.aiDescription', 'To get perfect, 100% accurate document recognition, we use Google Gemini Vision AI. Get a free API key from aistudio.google.com and paste it below.')}
-              </Text>
-              
-              <TextInput
-                style={[styles.textInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surfaceElevated }]}
-                placeholder={t('upload.pasteKey', 'Paste Gemini API Key here')}
-                placeholderTextColor={colors.textMuted}
-                value={apiKey}
-                onChangeText={setApiKey}
-                secureTextEntry
-              />
-
-              <TouchableOpacity style={[styles.saveBtn, { backgroundColor: '#10B981', marginTop: 24 }]} onPress={saveApiKey}>
-                <Text style={styles.saveBtnText}>{t('upload.activateBtn', 'Activate True AI')}</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-
-          {stage === 'type_selection' && (
-            <View style={styles.selectionContainer}>
-              <Text style={[styles.selectionTitle, { color: colors.text }]}>{t('upload.whatAreYouUploading', 'What are you uploading?')}</Text>
-              <Text style={[styles.selectionSub, { color: colors.textMuted }]}>
-                {t('upload.whatAreYouUploadingSub', 'Type literally anything. The True AI will perfectly verify it and extract its details.')}
-              </Text>
-              
-              <TextInput
-                style={[styles.textInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surfaceElevated }]}
-                placeholder={t('upload.placeholder', 'e.g. Dog Vaccination Record')}
-                placeholderTextColor={colors.textMuted}
-                value={customDocType}
-                onChangeText={setCustomDocType}
-                autoFocus={true}
-              />
-
-              <TouchableOpacity style={[styles.saveBtn, { backgroundColor: colors.primary, marginTop: 24, opacity: customDocType.trim().length > 1 ? 1 : 0.5 }]} onPress={handleContinue} disabled={customDocType.trim().length < 2}>
-                <Text style={styles.saveBtnText}>{t('upload.continue', 'Continue')}</Text>
-                <Ionicons name="arrow-forward" size={20} color="#FFF" />
-              </TouchableOpacity>
-            </View>
-          )}
-
-          {stage === 'upload_choice' && (
-            <View style={[styles.uploadZone, { borderColor: colors.accent, backgroundColor: colors.surfaceElevated }]}>
-              <TouchableOpacity onPress={() => setStage('type_selection')} style={styles.backBtn}>
-                <Ionicons name="arrow-back" size={20} color={colors.textSecondary} />
-                <Text style={{ color: colors.textSecondary }}>{t('upload.change', 'Change')}</Text>
-              </TouchableOpacity>
-
-              <View style={[styles.uploadIcon, { backgroundColor: colors.primary + '18' }]}>
-                <Ionicons name="camera" size={48} color={colors.primary} />
-              </View>
-              <Text style={[styles.uploadText, { color: colors.text }]}>{t('upload.uploadYour', 'Upload your {{type}}', { type: customDocType })}</Text>
-              
-              <View style={styles.uploadButtons}>
-                <TouchableOpacity style={[styles.uploadBtn, { backgroundColor: colors.accent }]} onPress={takePhoto}>
-                  <Ionicons name="camera" size={18} color="#FFF" />
-                  <Text style={styles.uploadBtnText}>{t('upload.takePhoto', 'Take Photo')}</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
-
-          {(stage === 'processing' || stage === 'done') && fileData && (
-            <View style={[styles.processingCard, { backgroundColor: colors.surface }]}>
-              <View style={[styles.filePreview, { backgroundColor: colors.surfaceElevated }]}>
-                <Ionicons name={fileData.isImage ? "image" : "document-text"} size={32} color={colors.primary} />
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.fileName, { color: colors.text }]} numberOfLines={1}>{fileData.name}</Text>
-                  <Text style={{ color: colors.primary, fontSize: 12, fontWeight: '600', marginTop: 2 }}>{t('upload.analyzingAs', 'True AI analyzing as:')} {customDocType}</Text>
-                </View>
-              </View>
-              
-              {STEPS.map((step, i) => {
-                const isActive = i <= currentStep;
-                const isDone = i < currentStep || stage === 'done';
-                return (
-                  <View key={step.key} style={styles.stepRow}>
-                    <View style={[styles.stepIcon, { backgroundColor: isDone ? colors.success + '20' : isActive ? colors.primary + '20' : colors.surfaceElevated }]}>
-                      <Ionicons name={isDone ? 'checkmark-circle' : step.icon as any} size={20} color={isDone ? colors.success : isActive ? colors.primary : colors.textMuted} />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={[styles.stepText, { color: isActive ? colors.text : colors.textMuted }]}>{step.label}</Text>
-                      {isActive && !isDone && (
-                        <View style={[styles.progressBg, { backgroundColor: colors.surfaceElevated }]}>
-                          <Animated.View style={[styles.progressFill, { backgroundColor: colors.primary, width: progressAnims[i].interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] }) }]} />
-                        </View>
-                      )}
-                    </View>
-                  </View>
-                );
-              })}
-            </View>
-          )}
-
-          {stage === 'done' && dynamicResult && (
-            <Animated.View style={[styles.resultCard, { backgroundColor: colors.surface, opacity: fadeAnim }]}>
-              <Text style={[styles.resultTitle, { color: colors.text }]}>{t('upload.verificationResults', 'True AI Verification Results')}</Text>
-              <View style={[styles.typeBadge, { backgroundColor: '#10B98120' }]}>
-                <Text style={{ color: '#10B981', fontWeight: '800', fontSize: 14 }}>{t('upload.verified', '✓ 100% VERIFIED')} {dynamicResult.type.toUpperCase()}</Text>
-              </View>
-              {dynamicResult.fields.map((f: any, i: number) => (
-                <View key={i} style={[styles.fieldRow, { borderBottomColor: colors.border }]}>
-                  <Text style={[styles.fieldKey, { color: colors.textSecondary }]}>{f.key}</Text>
-                  <Text style={[styles.fieldValue, { color: colors.text }]}>{f.value}</Text>
-                </View>
-              ))}
-              <View style={styles.actionRow}>
-                <TouchableOpacity style={[styles.saveBtn, { backgroundColor: colors.primary }]} onPress={saveToDatabase}>
-                  <Ionicons name="cloud-upload" size={20} color="#FFF" />
-                  <Text style={styles.saveBtnText}>{t('upload.saveToVault', 'Save to Secure Vault')}</Text>
-                </TouchableOpacity>
-              </View>
-            </Animated.View>
-          )}
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+    <View style={styles.container}>
+      {stage === 'idle' && renderIdle()}
+      {stage === 'processing' && renderProcessing()}
+      {stage === 'done' && renderDone()}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1 },
-  scroll: { padding: 20, paddingBottom: 100 },
-  title: { fontSize: 28, fontWeight: '800', marginBottom: 20 },
-  selectionContainer: { marginTop: 10 },
-  selectionTitle: { fontSize: 20, fontWeight: '700', marginBottom: 8 },
-  selectionSub: { fontSize: 14, marginBottom: 20, lineHeight: 20 },
-  textInput: { borderWidth: 1, borderRadius: 14, padding: 16, fontSize: 16, fontWeight: '500' },
-  backBtn: { position: 'absolute', top: 16, left: 16, flexDirection: 'row', alignItems: 'center', gap: 6, zIndex: 10 },
-  uploadZone: { borderWidth: 2, borderStyle: 'dashed', borderRadius: 24, padding: 32, paddingTop: 50, alignItems: 'center', position: 'relative' },
-  uploadIcon: { width: 80, height: 80, borderRadius: 24, justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
-  uploadText: { fontSize: 16, fontWeight: '500', marginBottom: 20, textAlign: 'center' },
-  uploadButtons: { flexDirection: 'row', gap: 12 },
-  uploadBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 12 },
-  uploadBtnText: { color: '#FFF', fontWeight: '700', fontSize: 14 },
-  processingCard: { borderRadius: 20, padding: 20, elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8 },
-  filePreview: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 14, marginBottom: 20 },
-  fileName: { fontSize: 15, fontWeight: '600' },
-  stepRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
-  stepIcon: { width: 36, height: 36, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
-  stepText: { fontSize: 14, fontWeight: '500' },
-  progressBg: { height: 4, borderRadius: 2, marginTop: 6, overflow: 'hidden' },
-  progressFill: { height: '100%', borderRadius: 2 },
-  resultCard: { borderRadius: 20, padding: 20, marginTop: 16, elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8 },
-  resultTitle: { fontSize: 18, fontWeight: '700', marginBottom: 12 },
-  typeBadge: { alignSelf: 'flex-start', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 10, marginBottom: 16 },
-  fieldRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1 },
-  fieldKey: { width: 120, fontSize: 13, fontWeight: '500' },
-  fieldValue: { flex: 1, fontSize: 14, fontWeight: '600' },
-  actionRow: { marginTop: 20 },
-  saveBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 16, borderRadius: 14 },
-  saveBtnText: { color: '#FFF', fontSize: 17, fontWeight: '700' },
+  container: { flex: 1, backgroundColor: PALETTE.bg, paddingTop: 60, paddingHorizontal: 24 },
+  
+  // Idle UI
+  idleContainer: { flex: 1, alignItems: 'center' },
+  idleTitle: { color: PALETTE.textBlack, fontSize: 32, fontWeight: '900', fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif', marginBottom: 12 },
+  idleDesc: { color: PALETTE.textMuted, fontSize: 16, textAlign: 'center', lineHeight: 24, marginBottom: 40 },
+  
+  scannerBox: { width: 220, height: 260, backgroundColor: PALETTE.white, borderRadius: 24, justifyContent: 'center', alignItems: 'center', marginBottom: 40, borderWidth: 1, borderColor: 'rgba(74, 47, 29, 0.1)', shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.1, shadowRadius: 20, elevation: 5 },
+  scannerLine: { position: 'absolute', width: '80%', height: 3, backgroundColor: PALETTE.woodLight, shadowColor: PALETTE.woodMedium, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 1, shadowRadius: 8, elevation: 10 },
+  bracket: { position: 'absolute', width: 20, height: 20, borderColor: PALETTE.woodMedium, borderWidth: 0 },
+  tl: { top: 16, left: 16, borderTopWidth: 3, borderLeftWidth: 3 },
+  tr: { top: 16, right: 16, borderTopWidth: 3, borderRightWidth: 3 },
+  bl: { bottom: 16, left: 16, borderBottomWidth: 3, borderLeftWidth: 3 },
+  br: { bottom: 16, right: 16, borderBottomWidth: 3, borderRightWidth: 3 },
+
+  secondaryBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 16, gap: 8, marginTop: 12 },
+  secondaryBtnText: { color: PALETTE.woodDark, fontSize: 16, fontWeight: '700' },
+
+  // Processing UI
+  processingContainer: { flex: 1, justifyContent: 'center' },
+  processingTitle: { color: PALETTE.textBlack, fontSize: 32, fontWeight: '900', fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif', marginBottom: 40, textAlign: 'center' },
+  stepsContainer: { backgroundColor: PALETTE.white, borderRadius: 24, padding: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.05, shadowRadius: 20, elevation: 5 },
+  stepRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 24 },
+  stepIconBox: { width: 40, height: 40, borderRadius: 20, backgroundColor: PALETTE.bg, justifyContent: 'center', alignItems: 'center', marginRight: 16, borderWidth: 1, borderColor: 'rgba(74, 47, 29, 0.1)' },
+  stepIconBoxActive: { backgroundColor: PALETTE.woodMedium, borderColor: PALETTE.woodDark },
+  stepIconBoxDone: { backgroundColor: '#10B981', borderColor: '#059669' },
+  stepContent: { flex: 1 },
+  stepLabel: { color: PALETTE.textMuted, fontSize: 15, fontWeight: '600', marginBottom: 8 },
+  stepLabelActive: { color: PALETTE.textBlack },
+  progressBarBg: { height: 6, backgroundColor: PALETTE.bg, borderRadius: 3, overflow: 'hidden' },
+  progressBarFill: { height: '100%', backgroundColor: PALETTE.woodMedium, borderRadius: 3 },
+
+  // Done UI
+  doneContainer: { paddingBottom: 100 },
+  successHeader: { alignItems: 'center', marginBottom: 32 },
+  successIconRing: { width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(16, 185, 129, 0.1)', justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
+  successTitle: { color: PALETTE.textBlack, fontSize: 28, fontWeight: '900', fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif', marginBottom: 8 },
+  successSubtitle: { color: PALETTE.textMuted, fontSize: 16 },
+  
+  resultCard: { backgroundColor: PALETTE.white, borderRadius: 24, padding: 24, marginBottom: 32, shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.05, shadowRadius: 20, elevation: 5, borderWidth: 1, borderColor: 'rgba(74, 47, 29, 0.1)' },
+  resultHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+  resultDocType: { color: PALETTE.woodDark, fontSize: 18, fontWeight: '800' },
+  confidenceBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(139, 94, 52, 0.1)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, gap: 4 },
+  confidenceText: { color: PALETTE.woodDark, fontSize: 12, fontWeight: '800', textTransform: 'uppercase' },
+  linkAlert: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(74, 47, 29, 0.05)', padding: 12, borderRadius: 12, gap: 8, marginBottom: 24 },
+  linkText: { color: PALETTE.woodDark, fontSize: 14 },
+  
+  fieldsContainer: { gap: 16 },
+  fieldRow: { flexDirection: 'row', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: PALETTE.bg, paddingBottom: 12 },
+  fieldKey: { color: PALETTE.textMuted, fontSize: 14, fontWeight: '600' },
+  fieldValue: { color: PALETTE.textBlack, fontSize: 14, fontWeight: '800' },
+
+  // Universal Button
+  woodButton: { width: '100%', borderRadius: 20, shadowColor: '#4A2F1D', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.4, shadowRadius: 12, elevation: 8 },
+  woodButtonGradient: { borderRadius: 20, padding: 2 },
+  woodButtonInner: { backgroundColor: 'rgba(0,0,0,0.1)', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 18, borderRadius: 18, gap: 12 },
+  buttonText: { color: '#FFF8DC', fontSize: 18, fontWeight: '900', letterSpacing: 1.5, textShadowColor: 'rgba(0,0,0,0.6)', textShadowOffset: {width: 0, height: 2}, textShadowRadius: 4 },
 });
