@@ -90,7 +90,7 @@ export default function HomeInteractiveVault() {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
 
-      <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
+      <View style={StyleSheet.absoluteFill} pointerEvents="none">
         {isLoggedIn ? (
           <VideoView 
             player={player} 
@@ -105,7 +105,7 @@ export default function HomeInteractiveVault() {
       </View>
 
       {/* Dim the background slightly so UI is readable, but keep it mostly clear for the image */}
-      <View style={[StyleSheet.absoluteFillObject, { backgroundColor: 'rgba(0,0,0,0.1)' }]} pointerEvents="none" />
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.1)' }]} pointerEvents="none" />
 
       {/* Top Header */}
       <View style={styles.header} pointerEvents="box-none">
@@ -246,7 +246,7 @@ export default function HomeInteractiveVault() {
 
       {/* INVISIBLE TOUCH ZONES PLACED AT VERY END TO GUARANTEE THEY ARE ON TOP */}
       {isLoggedIn && (
-        <View style={StyleSheet.absoluteFillObject} pointerEvents="box-none">
+        <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
           {/* AC Touch Zone (Left Wall) */}
           <TouchableOpacity 
             style={styles.acTouchZone} 
@@ -274,7 +274,7 @@ export default function HomeInteractiveVault() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#2D1B15' },
   bgMedia: { width: '100%', height: '100%' },
-  darkOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: '#000' },
+  darkOverlay: { ...StyleSheet.absoluteFill, backgroundColor: '#000' },
   
   /* Touch Zones for the physical image mapping */
   acTouchZone: { position: 'absolute', top: '25%', left: '0%', width: '50%', height: '35%', zIndex: 999, elevation: 999 },
@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(62, 39, 35, 0.95)',
     borderColor: 'rgba(212, 175, 55, 0.6)',
   },
-  deviceIconBox: { width: 48, height: 48, borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
+  deviceIconBoxActive: { backgroundColor: "rgba(255,255,255,0.15)", borderColor: "rgba(255,255,255,0.3)" }, deviceIconBox: { width: 48, height: 48, borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
   deviceName: { color: '#FFF', fontSize: 15, fontWeight: '600', marginBottom: 4 },
   deviceStatus: { fontSize: 12, fontWeight: '500' }
 });
